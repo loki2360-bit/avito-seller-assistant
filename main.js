@@ -22,7 +22,7 @@ const addOrderBtn = document.getElementById('add-order');
 const searchInput = document.getElementById('search-input');
 const adminBtn = document.getElementById('admin-btn');
 
-// === Рендер участков с счётчиками (только активные заказы) ===
+// === Рендер участков с счётчиками (только активные: не закрытые) ===
 function renderStations() {
   const activeOrders = orders.filter(o => o.status !== 'Закрыт');
   const counts = {};
@@ -56,7 +56,7 @@ function loadOrders(searchTerm = null) {
     if (searchTerm) {
       return order.orderId.toLowerCase().includes(searchTerm.toLowerCase());
     } else {
-      return order.currentStation === currentStation; // ← включая закрытые!
+      return order.currentStation === currentStation;
     }
   });
 
@@ -77,24 +77,38 @@ function loadOrders(searchTerm = null) {
       statusText = '❌ Закрыт';
     }
 
-    // Кнопки только для НЕ закрытых заказов
-    let buttons = '';
+    // Выпадающий список статусов (если не закрыт)
+    let statusSelect = '';
     if (!searchTerm && order.status !== 'Закрыт') {
-      buttons = `
-        <button onclick="showMoveDialog(${index})">Переместить</button>
-        <button onclick="closeOrder(${index})">Закрыть</button>
+      const options = ['Принят в работу', 'В работе', 'Готов', 'Закрыт'].map(s => 
+        `<option value="${s}" ${s === order.status ? 'selected' : ''}>${s}</option>`
+      ).join('');
+
+      statusSelect = `
+        <select onchange="updateStatus(${index}, this.value)" style="margin-left: 8px;">
+          ${options}
+        </select>
       `;
+    }
+
+    // Кнопка переместить (если не закрыт)
+    let moveButton = '';
+    if (!searchTerm && order.status !== 'Закрыт') {
+      moveButton = `<button onclick="showMoveDialog(${index})">Переместить</button>`;
     }
 
     card.innerHTML = `
       <div class="order-id">#${order.orderId} (${statusText})</div>
-      <div class="status-buttons">${buttons}</div>
+      <div class="status-buttons">
+        ${moveButton}
+        ${statusSelect}
+      </div>
     `;
     ordersContainer.appendChild(card);
   });
 }
 
-// === Добавление заказа ===
+// === Добавление заказа — по умолчанию "Принят в работу" ===
 addOrderBtn.addEventListener('click', () => {
   const orderId = orderInput.value.trim();
   if (!orderId) return alert('Введите номер заказа');
@@ -103,7 +117,7 @@ addOrderBtn.addEventListener('click', () => {
   orders.push({
     orderId,
     currentStation: stations[0],
-    status: 'Не начат',
+    status: 'Принят в работу', // ← изменили!
     createdAt: new Date().toISOString()
   });
 
@@ -117,6 +131,14 @@ addOrderBtn.addEventListener('click', () => {
 searchInput.addEventListener('input', (e) => {
   loadOrders(e.target.value.trim());
 });
+
+// === Обновить статус заказа ===
+window.updateStatus = (index, newStatus) => {
+  orders[index].status = newStatus;
+  saveData();
+  renderStations(); // пересчитаем счётчики
+  loadOrders();     // обновим отображение
+};
 
 // === Показать диалог перемещения с выпадающим списком ===
 window.showMoveDialog = (index) => {
@@ -151,7 +173,7 @@ window.confirmMove = (index) => {
   const select = document.getElementById('move-select');
   const newStation = select.value;
   orders[index].currentStation = newStation;
-  orders[index].status = 'Не начат';
+  // Не меняем статус при перемещении — оставляем как есть
   saveData();
   closeMoveDialog();
   renderStations();
@@ -164,17 +186,7 @@ window.closeMoveDialog = () => {
   if (modal) modal.remove();
 };
 
-// === Закрыть заказ ===
-window.closeOrder = (index) => {
-  if (confirm(`Закрыть заказ #${orders[index].orderId}?`)) {
-    orders[index].status = 'Закрыт';
-    saveData();
-    renderStations(); // обновить счётчики (закрытые не считаются)
-    loadOrders();     // но всё равно отображаются
-  }
-};
-
-// === Админка (без изменений, но оставим для полноты) ===
+// === Админка (без изменений) ===
 adminBtn.addEventListener('click', () => {
   const pass = prompt('Админ-пароль:');
   if (pass !== 'admin123') {

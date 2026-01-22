@@ -36,19 +36,24 @@ const loginPassword = document.getElementById('login-password');
 const loginBtn = document.getElementById('login-btn');
 const loginError = document.getElementById('login-error');
 const logoutBtn = document.getElementById('logout-btn');
-const adminBtn = document.getElementById('admin-btn'); // ← новая кнопка
+const adminBtn = document.getElementById('admin-btn');
 const currentUserEl = document.getElementById('current-user');
 
 // === Проверка автоматического входа ===
 function checkAutoLogin() {
   const savedUser = localStorage.getItem('currentUser');
   if (savedUser) {
-    const user = JSON.parse(savedUser);
-    const found = users.find(u => u.username === user.username && u.password === user.password);
-    if (found) {
-      currentUser = found;
-      showApp();
-      return;
+    try {
+      const user = JSON.parse(savedUser);
+      // Ищем пользователя с таким же логином и паролем
+      const found = users.find(u => u.username === user.username && u.password === user.password);
+      if (found) {
+        currentUser = found;
+        showApp();
+        return;
+      }
+    } catch (e) {
+      console.error("Ошибка при разборе currentUser:", e);
     }
   }
   loginScreen.style.display = 'flex';
@@ -58,9 +63,11 @@ function checkAutoLogin() {
 loginBtn.addEventListener('click', () => {
   const username = loginUsername.value.trim();
   const password = loginPassword.value;
+
   const user = users.find(u => u.username === username && u.password === password);
   if (user) {
     currentUser = user;
+    // Сохраняем весь объект пользователя (с паролем) для последующей проверки
     localStorage.setItem('currentUser', JSON.stringify(user));
     loginError.style.display = 'none';
     showApp();
@@ -173,8 +180,13 @@ document.getElementById('search-input').addEventListener('input', (e) => {
 
 // === Переместить заказ (по ID!) ===
 window.showMoveDialog = (orderId) => {
-  const order = orders.find(o => o.id === orderId);
-  if (!order) return;
+  // Убедимся, что orderId — строка
+  const id = String(orderId);
+  const order = orders.find(o => o.id === id);
+  if (!order) {
+    alert('Заказ не найден');
+    return;
+  }
 
   const modal = document.createElement('div');
   modal.id = 'move-modal';
@@ -193,7 +205,7 @@ window.showMoveDialog = (orderId) => {
       <h4>Переместить #${order.orderId}</h4>
       <select id="move-select" style="width: 100%; margin: 10px 0;">${options}</select>
       <div>
-        <button onclick="confirmMove('${orderId}')" style="margin-right: 10px;">OK</button>
+        <button onclick="confirmMove('${id}')" style="margin-right: 10px;">OK</button>
         <button onclick="closeMoveDialog()">Отмена</button>
       </div>
     </div>
@@ -203,7 +215,8 @@ window.showMoveDialog = (orderId) => {
 
 window.confirmMove = (orderId) => {
   const select = document.getElementById('move-select');
-  const order = orders.find(o => o.id === orderId);
+  const id = String(orderId);
+  const order = orders.find(o => o.id === id);
   if (order) {
     order.station = select.value;
     saveData();
@@ -220,11 +233,12 @@ window.closeMoveDialog = () => {
 
 // === Закрыть заказ (по ID!) ===
 window.closeOrder = (orderId) => {
-  const order = orders.find(o => o.id === orderId);
+  const id = String(orderId);
+  const order = orders.find(o => o.id === id);
   if (!order) return;
 
   if (confirm(`Закрыть заказ #${order.orderId}?`)) {
-    orders = orders.filter(o => o.id !== orderId);
+    orders = orders.filter(o => o.id !== id);
     saveData();
     renderStations();
     loadOrders();
@@ -234,7 +248,7 @@ window.closeOrder = (orderId) => {
 // === Админка ===
 adminBtn.addEventListener('click', () => {
   const pass = prompt('Админ-пароль:');
-  if (pass !== 'admin123') { // ← замените на свой!
+  if (pass !== 'admin123') {
     alert('Неверный пароль');
     return;
   }
@@ -311,8 +325,14 @@ window.deleteStation = (name) => {
 };
 
 window.deleteOrder = (orderId) => {
-  if (confirm(`Удалить заказ #${orders.find(o => o.id === orderId)?.orderId}?`)) {
-    orders = orders.filter(o => o.id !== orderId);
+  const id = String(orderId);
+  const order = orders.find(o => o.id === id);
+  if (!order) {
+    alert('Заказ не найден');
+    return;
+  }
+  if (confirm(`Удалить заказ #${order.orderId}?`)) {
+    orders = orders.filter(o => o.id !== id);
     saveData();
     location.reload();
   }

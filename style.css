@@ -106,35 +106,36 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: 20px;
+  padding: 16px;
 }
 
 .header {
   display: flex;
-  gap: 12px;
-  padding: 16px;
+  gap: 10px;
+  padding: 14px;
   background: linear-gradient(135deg, #00221a 0%, #003322 100%);
   border-radius: 16px;
   align-items: center;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
   backdrop-filter: blur(10px);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
 .header input,
 .header button {
-  padding: 10px 16px;
+  padding: 12px 16px;
   border: none;
   border-radius: 12px;
-  font-size: 14px;
-  height: 40px;
+  font-size: 16px;
+  height: 48px;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  min-width: 120px;
+  flex: 1;
 }
 
 .header input {
-  flex: 1;
-  min-width: 120px;
   background: white;
   color: #003322;
   font-weight: bold;
@@ -151,8 +152,9 @@ body {
   font-weight: bold;
   cursor: pointer;
   white-space: nowrap;
-  min-width: 90px;
   transition: all 0.3s ease;
+  flex: none;
+  min-width: 100px;
 }
 
 .header button:hover {
@@ -162,7 +164,7 @@ body {
 }
 
 .orders-container {
-  padding: 20px;
+  padding: 16px;
   background: white;
   flex-grow: 1;
   overflow-y: auto;
@@ -191,7 +193,7 @@ body {
 
 .order-id {
   font-weight: bold;
-  font-size: 14px;
+  font-size: 16px;
   color: #003322;
   text-shadow: 0 1px 1px rgba(0,0,0,0.1);
 }
@@ -200,14 +202,15 @@ body {
   background: linear-gradient(135deg, #003322 0%, #004d33 100%);
   color: white;
   border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 12px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
   cursor: pointer;
   margin-left: 8px;
   font-weight: bold;
   transition: all 0.3s ease;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  min-width: 100px;
 }
 
 .status-buttons button:hover {
@@ -251,11 +254,11 @@ body {
 .modal-content select,
 .modal-content button {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   margin: 8px 0;
   border: 1px solid #ccc;
   border-radius: 12px;
-  font-size: 14px;
+  font-size: 16px;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
@@ -279,4 +282,69 @@ body {
   background: linear-gradient(135deg, #004d33 0%, #006644 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* === Мобильная адаптация === */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    order: 2;
+  }
+
+  .main-content {
+    order: 1;
+    padding: 12px;
+  }
+
+  .header {
+    padding: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .header input,
+  .header button {
+    height: 52px;
+    font-size: 18px;
+    min-width: auto;
+  }
+
+  .header button {
+    flex: 1;
+  }
+
+  .orders-container {
+    padding: 12px;
+  }
+
+  .order-card {
+    padding: 14px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .status-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .status-buttons button {
+    flex: 1;
+    min-width: auto;
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  .modal-content {
+    padding: 20px;
+  }
 }

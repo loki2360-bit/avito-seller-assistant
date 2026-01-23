@@ -2,8 +2,9 @@
 const SUPABASE_URL = 'https://zitdekerfjocbulmfuyo.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_41ROEqZ74QbA4B6_JASt4w_DeRDGXWR';
 
-// Создаём клиент Supabase
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Создаём клиент Supabase — только один раз!
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // === Участки ===
 const stations = [
   "Распил", "ЧПУ", "Покраска", "Фрезеровка",
@@ -31,7 +32,7 @@ async function renderStations() {
   const counts = {};
   stations.forEach(s => counts[s] = 0);
 
-  const { data } = await supabaseClient.from('orders').select('station');
+  const { data } = await supabase.from('orders').select('station');
   if (data) {
     data.forEach(row => {
       if (counts.hasOwnProperty(row.station)) {
@@ -56,7 +57,7 @@ async function renderStations() {
 
 // === Загрузка заказов ===
 async function loadOrders(searchTerm = null) {
-  let query = supabaseClient.from('orders').select('*');
+  let query = supabase.from('orders').select('*');
 
   if (searchTerm) {
     query = query.ilike('order_id', `%${searchTerm}%`);
@@ -100,7 +101,7 @@ function renderOrders(ordersList) {
 
     const idDiv = document.createElement('div');
     idDiv.className = 'order-id';
-    idDiv.textContent = `#${order.order_id || order.orderId}`;
+    idDiv.textContent = `#${order.order_id}`;
 
     card.appendChild(idDiv);
     card.appendChild(buttonsDiv);
@@ -109,15 +110,13 @@ function renderOrders(ordersList) {
 
   container.appendChild(scrollable);
 }
-  });
-}
 
 // === Добавление заказа ===
 addOrderBtn.addEventListener('click', async () => {
   const orderId = orderInput.value.trim();
   if (!orderId) return alert('Введите номер заказа');
 
-  const { error } = await supabaseClient.from('orders').insert({
+  const { error } = await supabase.from('orders').insert({
     order_id: orderId,
     station: stations[0]
   });
@@ -172,7 +171,7 @@ function showMoveDialog(orderId) {
 }
 
 async function confirmMove(orderId, newStation) {
-  const { error } = await supabaseClient
+  const { error } = await supabase
     .from('orders')
     .update({ station: newStation })
     .eq('id', orderId);
@@ -190,7 +189,7 @@ async function confirmMove(orderId, newStation) {
 async function closeOrder(orderId) {
   if (!confirm('Закрыть заказ?')) return;
 
-  const { error } = await supabaseClient
+  const { error } = await supabase
     .from('orders')
     .delete()
     .eq('id', orderId);
@@ -210,5 +209,5 @@ adminBtn.addEventListener('click', () => {
     alert('Неверный пароль');
     return;
   }
-  alert('Админка пока не реализована. Управление участниками — в коде или через Supabase SQL.');
+  alert(' УПС!Админка пока не реализована.');
 });

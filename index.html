@@ -10,7 +10,10 @@
 <body>
   <div class="container">
     <aside class="sidebar">
-      <h2>Участки</h2>
+      <div class="stations-header">
+        <h2>Участки</h2>
+        <button id="add-station-btn" class="add-station-btn">+</button>
+      </div>
       <ul id="stations-list"></ul>
       <button id="admin-btn">Админка</button>
     </aside>
@@ -21,6 +24,11 @@
         <button id="add-order">добавить</button>
         <input type="text" id="search-input" placeholder="поиск по №" />
       </div>
+
+      <div class="stats-bar">
+        Открыто: <span id="open-orders-count">0</span>
+      </div>
+
       <div id="orders-container" class="orders-container"></div>
     </main>
   </div>

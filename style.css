@@ -167,11 +167,33 @@ body {
   box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
 }
 
+/* === Кнопка получения кода === */
+.get-code-btn {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3);
+}
+
+.get-code-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(108, 117, 125, 0.4);
+  background: linear-gradient(135deg, #7a8288 0%, #687076 100%);
+}
+
 /* === Премиум-секция === */
 .premium-section {
   display: flex;
   gap: 6px;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .premium-section input {
@@ -246,20 +268,21 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  padding: 14px;
+  gap: 8px;
+  padding: 12px;
   background: linear-gradient(135deg, #495057 0%, #343a40 100%);
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
 .header-left {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-grow: 1;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .header-right {
@@ -272,7 +295,7 @@ body {
 .app-title {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   font-weight: 600;
-  font-size: 24px;
+  font-size: 22px;
   color: white;
   letter-spacing: -0.5px;
   margin-left: 8px;
@@ -280,13 +303,12 @@ body {
 
 .header input,
 .header button {
-  padding: 10px 14px;
+  padding: 8px 12px;
   border: 1px solid #ced4da;
-  border-radius: 8px;
-  font-size: 15px;
-  height: 44px;
+  border-radius: 6px;
+  font-size: 14px;
   transition: all 0.2s ease;
-  min-width: 120px;
+  min-width: 100px;
 }
 
 .header input {
@@ -306,13 +328,13 @@ body {
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  min-width: 90px;
+  min-width: 80px;
   transition: all 0.2s ease;
 }
 
 .header button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+  box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
 }
 
 .orders-wrapper {
@@ -509,8 +531,9 @@ body {
 
   .header input,
   .header button {
-    height: 48px;
-    font-size: 16px;
+    height: auto;
+    padding: 8px 12px;
+    font-size: 14px;
     min-width: auto;
   }
 
@@ -541,25 +564,4 @@ body {
     padding: 10px;
     font-size: 14px;
   }
-}
-/* === Кнопка получения кода === */
-.get-code-btn {
-  display: block;
-  width: 100%;
-  padding: 8px 12px;
-  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); /* Серый, не отвлекает */
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  text-align: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3);
-}
-
-.get-code-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(108, 117, 125, 0.4);
-  background: linear-gradient(135deg, #7a8288 0%, #687076 100%);
 }

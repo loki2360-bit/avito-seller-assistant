@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Производство — Трекер задач</title>
+  <title>ZyNymbo — Трекер задач</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -33,21 +33,22 @@
       </aside>
 
       <main class="main-content">
-  <div class="header">
-    <div class="header-left">
-      <input type="text" id="order-input" placeholder="номер заказа" />
-      <button id="add-order">добавить</button>
-      <input type="text" id="search-input" placeholder="поиск по №" />
-    </div>
-    <div class="header-right">
-      <!-- Логотип -->
-      <img src="logo.png" alt="Логотип" class="app-logo" />
+        <div class="header">
+          <div class="header-left">
+            <input type="text" id="order-input" placeholder="номер заказа" />
+            <button id="add-order">добавить</button>
+            <input type="text" id="search-input" placeholder="поиск по №" />
+          </div>
+          <div class="header-right">
+            <div class="app-title">ZyNymbo</div>
+          </div>
+        </div>
+        <div class="orders-wrapper">
+          <div id="orders-container" class="orders-container"></div>
+        </div>
+      </main>
     </div>
   </div>
-  <div class="orders-wrapper">
-    <div id="orders-container" class="orders-container"></div>
-  </div>
-</main>
 
   <script src="main.js"></script>
 </body>

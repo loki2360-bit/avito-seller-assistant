@@ -2,16 +2,16 @@
 const SUPABASE_URL = 'https://zitdekerfjocbulmfuyo.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_41ROEqZ74QbA4B6_JASt4w_DeRDGXWR';
 
-// Создаём клиент Supabase — только один раз!
+// Создаём клиент Supabase
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// === Участки ===
-const stations = [
-  "Распил", "ЧПУ", "Покраска", "Фрезеровка",
-  "Шпонировка", "Сборка", "Упаковка"
-];
+let currentStation = '';
 
-let currentStation = stations[0];
+// === Загрузка участков из базы ===
+async function loadStations() {
+  const { data } = await supabase.from('stations').select('name').order('name', { ascending: true });
+  return data ? data.map(s => s.name) : [];
+}
 
 // === DOM элементы ===
 const stationsList = document.getElementById('stations-list');
@@ -22,13 +22,18 @@ const searchInput = document.getElementById('search-input');
 const adminBtn = document.getElementById('admin-btn');
 
 // === Загрузка при старте ===
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  const stations = await loadStations();
+  if (stations.length > 0) {
+    currentStation = stations[0];
+  }
   renderStations();
   loadOrders();
 });
 
 // === Рендер участков с счётчиками ===
 async function renderStations() {
+  const stations = await loadStations();
   const counts = {};
   stations.forEach(s => counts[s] = 0);
 
@@ -116,6 +121,10 @@ addOrderBtn.addEventListener('click', async () => {
   const orderId = orderInput.value.trim();
   if (!orderId) return alert('Введите номер заказа');
 
+  // Получаем первый участок из базы
+  const stations = await loadStations();
+  if (stations.length === 0) return alert('Нет участков');
+
   const { error } = await supabase.from('orders').insert({
     order_id: orderId,
     station: stations[0]
@@ -142,6 +151,7 @@ function showMoveDialog(orderId) {
   modal.id = 'move-modal';
 
   const select = document.createElement('select');
+  const stations = await loadStations();
   stations.forEach(s => {
     const opt = document.createElement('option');
     opt.value = s;

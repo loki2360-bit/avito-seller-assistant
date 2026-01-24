@@ -73,7 +73,7 @@ applyPremiumBtn.addEventListener('click', () => {
   }
 });
 
-// Выбор эмодзи
+// === Выбор эмодзи ===
 emojiOptions.forEach(span => {
   span.addEventListener('click', () => {
     const emoji = span.getAttribute('data-emoji');
@@ -81,6 +81,8 @@ emojiOptions.forEach(span => {
     if (currentUserRole) {
       updateUserRoleDisplay(emoji);
     }
+    // Скрываем панель выбора после выбора
+    emojiSelector.style.display = 'none';
   });
 });
 

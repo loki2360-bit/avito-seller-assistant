@@ -5,9 +5,10 @@ const SUPABASE_ANON_KEY = 'sb_publishable_41ROEqZ74QbA4B6_JASt4w_DeRDGXWR';
 const { createClient } = supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// === Пароли ===
+// === Пароли для ролей ===
 const PASSWORDS = {
   operator: '12345',
+  premium: 'premium456',
   admin: 'admin123'
 };
 
@@ -37,59 +38,35 @@ let cachedStations = null;
 // === Выход из системы ===
 logoutBtn.addEventListener('click', () => {
   localStorage.removeItem('userRole');
-  localStorage.removeItem('userEmoji');
   currentUserRole = null;
   app.style.display = 'none';
   loginScreen.style.display = 'flex';
   loginPassword.value = '';
 });
 
-// === Премиум-функционал ===
-const premiumCodeInput = document.getElementById('premium-code');
-const applyPremiumBtn = document.getElementById('apply-premium');
-const emojiSelector = document.getElementById('emoji-selector');
-const emojiOptions = document.querySelectorAll('.emoji-options span');
-
-// Проверяем, есть ли сохранённый премиум-статус при загрузке
-const savedEmoji = localStorage.getItem('userEmoji');
-if (savedEmoji) {
-  emojiSelector.style.display = 'block';
-}
-
-// Применение премиум-кода
-applyPremiumBtn.addEventListener('click', () => {
-  const code = premiumCodeInput.value.trim();
-  // Замените 'PREMIUM123' на ваш реальный код
-  if (code === 'PREMIUM123') {
-    alert('Премиум-статус активирован!');
-    const defaultEmoji = '🌟';
-    localStorage.setItem('userEmoji', defaultEmoji);
-    emojiSelector.style.display = 'block';
-    if (currentUserRole) {
-      updateUserRoleDisplay(defaultEmoji);
-    }
-  } else {
-    alert('Неверный премиум-код');
+// === Обновление отображения роли ===
+function updateUserRoleDisplay() {
+  let roleText = '';
+  userRoleEl.className = 'user-role'; // Сбрасываем классы
+  
+  switch(currentUserRole) {
+    case 'admin':
+      roleText = 'Администратор';
+      userRoleEl.classList.add('admin');
+      break;
+    case 'premium':
+      roleText = 'Оператор';
+      userRoleEl.classList.add('premium');
+      break;
+    case 'operator':
+    default:
+      roleText = 'Оператор';
+      userRoleEl.classList.add('operator');
+      break;
   }
-});
-
-// === Выбор эмодзи ===
-emojiOptions.forEach(span => {
-  span.addEventListener('click', () => {
-    const emoji = span.getAttribute('data-emoji');
-    localStorage.setItem('userEmoji', emoji);
-    if (currentUserRole) {
-      updateUserRoleDisplay(emoji);
-    }
-    // Скрываем панель выбора после выбора
-    emojiSelector.style.display = 'none';
-  });
-});
-
-// Обновление отображения роли с эмодзи
-function updateUserRoleDisplay(emoji) {
-  const roleText = currentUserRole === 'admin' ? 'Администратор' : 'Оператор';
-  userRoleEl.innerHTML = `${emoji} ${roleText}`;
+  
+  userRoleEl.textContent = roleText;
+  adminControls.style.display = currentUserRole === 'admin' ? 'block' : 'none';
 }
 
 // === Вход по паролю ===
@@ -99,6 +76,9 @@ function handleLogin() {
   if (password === PASSWORDS.admin) {
     currentUserRole = 'admin';
     localStorage.setItem('userRole', 'admin');
+  } else if (password === PASSWORDS.premium) {
+    currentUserRole = 'premium';
+    localStorage.setItem('userRole', 'premium');
   } else if (password === PASSWORDS.operator) {
     currentUserRole = 'operator';
     localStorage.setItem('userRole', 'operator');
@@ -108,17 +88,7 @@ function handleLogin() {
     return;
   }
   
-  // Устанавливаем текст роли
-  userRoleEl.textContent = currentUserRole === 'admin' ? 'Администратор' : 'Оператор';
-  adminControls.style.display = currentUserRole === 'admin' ? 'block' : 'none';
-  
-  // Проверяем премиум-статус после входа
-  const savedEmoji = localStorage.getItem('userEmoji');
-  if (savedEmoji) {
-    updateUserRoleDisplay(savedEmoji);
-    emojiSelector.style.display = 'block';
-  }
-  
+  updateUserRoleDisplay();
   loginError.style.display = 'none';
   loginScreen.style.display = 'none';
   app.style.display = 'block';
@@ -497,26 +467,13 @@ stationsList.addEventListener('contextmenu', async (e) => {
   }
 });
 
-// === Запуск приложения ===
-if (!checkAutoLogin()) {
-  loginScreen.style.display = 'flex';
-}
-
 // === Проверка автоматического входа ===
 function checkAutoLogin() {
   const savedRole = localStorage.getItem('userRole');
   
-  if (savedRole && (savedRole === 'operator' || savedRole === 'admin')) {
+  if (savedRole && (savedRole === 'operator' || savedRole === 'premium' || savedRole === 'admin')) {
     currentUserRole = savedRole;
-    userRoleEl.textContent = savedRole === 'admin' ? 'Администратор' : 'Оператор';
-    adminControls.style.display = savedRole === 'admin' ? 'block' : 'none';
-    
-    // Проверяем премиум-статус
-    const savedEmoji = localStorage.getItem('userEmoji');
-    if (savedEmoji) {
-      updateUserRoleDisplay(savedEmoji);
-      emojiSelector.style.display = 'block';
-    }
+    updateUserRoleDisplay();
     
     loginScreen.style.display = 'none';
     app.style.display = 'block';
@@ -525,4 +482,9 @@ function checkAutoLogin() {
     return true;
   }
   return false;
+}
+
+// === Запуск приложения ===
+if (!checkAutoLogin()) {
+  loginScreen.style.display = 'flex';
 }

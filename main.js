@@ -185,7 +185,6 @@ async function loadOrders(searchTerm = null) {
     ordersContainer.innerHTML = '<p style="text-align:center; color:#dc3545;">Ошибка загрузки</p>';
   }
 }
-
 // === Отображение заказов ===
 async function renderOrders(ordersList) {
   ordersContainer.innerHTML = '';
@@ -257,6 +256,48 @@ async function renderOrders(ordersList) {
       }
     });
 
+    // Кнопка "Принять"
+    const acceptBtn = document.createElement('button');
+    acceptBtn.className = 'accept-btn';
+    acceptBtn.textContent = 'Принять';
+
+    // Надпись "принято"
+    const acceptedStatus = document.createElement('span');
+    acceptedStatus.className = 'accepted-status';
+    acceptedStatus.textContent = 'принято';
+
+    // Проверяем, был ли заказ принят
+    if (order.accepted) {
+      acceptBtn.classList.add('active');
+      acceptBtn.textContent = '';
+      acceptedStatus.style.display = 'inline';
+      acceptBtn.disabled = true;
+      acceptBtn.style.cursor = 'default';
+    }
+
+    // Обработчик клика по кнопке "Принять"
+    acceptBtn.addEventListener('click', async () => {
+      try {
+        const { error } = await supabaseClient
+          .from('orders')
+          .update({ accepted: true })
+          .eq('id', order.id);
+
+        if (error) throw error;
+
+        // Меняем состояние кнопки
+        acceptBtn.classList.add('active');
+        acceptBtn.textContent = '';
+        acceptedStatus.style.display = 'inline';
+        acceptBtn.disabled = true;
+        acceptBtn.style.cursor = 'default';
+
+      } catch (error) {
+        console.error('Ошибка принятия заказа:', error);
+        alert('Ошибка при принятии заказа.');
+      }
+    });
+
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Закрыть';
     closeBtn.addEventListener('click', () => closeOrder(order.id));
@@ -264,6 +305,8 @@ async function renderOrders(ordersList) {
     const buttonsDiv = document.createElement('div');
     buttonsDiv.className = 'status-buttons';
     buttonsDiv.appendChild(moveSelect);
+    buttonsDiv.appendChild(acceptBtn);
+    buttonsDiv.appendChild(acceptedStatus);
     buttonsDiv.appendChild(closeBtn);
 
     card.appendChild(idContainer);

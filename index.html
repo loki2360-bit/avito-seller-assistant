@@ -46,9 +46,20 @@
       <main class="main-content">
         <div class="header">
           <div class="header-left">
-            <input type="text" id="order-input" placeholder="номер заказа" />
             <button id="add-order">добавить</button>
             <input type="text" id="search-input" placeholder="поиск по №" />
+            <select id="position-filter">
+              <option value="">Все</option>
+              <option value="внутренняя панель">Внутренняя панель</option>
+              <option value="наружная панель">Наружная панель</option>
+              <option value="наличники">Наличники</option>
+              <option value="откосы">Откосы</option>
+              <option value="фрамуга">Фрамуга</option>
+              <option value="импосты">Импосты</option>
+              <option value="полотна">Полотна</option>
+              <option value="коробки">Коробки</option>
+              <option value="фасады">Фасады</option>
+            </select>
           </div>
           <div class="header-right">
             <div class="app-title">ZyNymbo</div>
@@ -58,6 +69,32 @@
           <div id="orders-container" class="orders-container"></div>
         </div>
       </main>
+    </div>
+  </div>
+
+  <!-- Модальное окно создания заказа -->
+  <div id="create-order-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h4>Создать заказ</h4>
+      <input type="text" id="modal-order-id" placeholder="Номер заказа" />
+      
+      <div class="position-group">
+        <div class="position-label">Выберите позицию:</div>
+        <div class="position-options">
+          <button type="button" class="position-btn" data-value="внутренняя панель">Внутренняя панель</button>
+          <button type="button" class="position-btn" data-value="наружная панель">Наружная панель</button>
+          <button type="button" class="position-btn" data-value="наличники">Наличники</button>
+          <button type="button" class="position-btn" data-value="откосы">Откосы</button>
+          <button type="button" class="position-btn" data-value="фрамуга">Фрамуга</button>
+          <button type="button" class="position-btn" data-value="импосты">Импосты</button>
+          <button type="button" class="position-btn" data-value="полотна">Полотна</button>
+          <button type="button" class="position-btn" data-value="коробки">Коробки</button>
+          <button type="button" class="position-btn" data-value="фасады">Фасады</button>
+        </div>
+      </div>
+      
+      <button id="create-order-ok">ОК</button>
+      <button id="create-order-cancel">Отмена</button>
     </div>
   </div>
 

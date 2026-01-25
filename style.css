@@ -579,10 +579,10 @@ body {
   color: white;
 }
 
-/* Премиум оператор - золотой */
+/* Премиум оператор - бирюзовый */
 .user-role.premium {
-  background: linear-gradient(135deg, #ffd700 0%, #ff9800 100%);
-  color: #333;
+  background: linear-gradient(135deg, #21f1a8 0%, #0fd98c 100%);
+  color: #000;
   font-weight: bold;
 }
 

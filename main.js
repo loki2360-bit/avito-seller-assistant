@@ -595,6 +595,50 @@ stationsList.addEventListener('contextmenu', async (e) => {
   }
 });
 
+// === Темы ===
+const settingsBtn = document.getElementById('settings-btn');
+const themeMenu = document.getElementById('theme-menu');
+
+// Показать/скрыть меню тем
+settingsBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  themeMenu.style.display = themeMenu.style.display === 'block' ? 'none' : 'block';
+});
+
+// Закрывать меню при клике вне его
+document.addEventListener('click', (e) => {
+  if (!themeMenu.contains(e.target) && e.target !== settingsBtn) {
+    themeMenu.style.display = 'none';
+  }
+});
+
+// Выбор темы
+document.querySelectorAll('.theme-option').forEach(option => {
+  option.addEventListener('click', () => {
+    const theme = option.dataset.theme;
+    
+    // Удаляем старую тему
+    document.body.classList.remove('green-theme');
+    
+    // Применяем новую
+    if (theme === 'green') {
+      document.body.classList.add('green-theme');
+    }
+    
+    // Сохраняем в localStorage
+    localStorage.setItem('appTheme', theme);
+    themeMenu.style.display = 'none';
+  });
+});
+
+// Загрузка темы при старте
+function loadTheme() {
+  const savedTheme = localStorage.getItem('appTheme');
+  if (savedTheme === 'green') {
+    document.body.classList.add('green-theme');
+  }
+}
+
 // === Проверка автоматического входа ===
 function checkAutoLogin() {
   const savedRole = localStorage.getItem('userRole');
@@ -621,6 +665,7 @@ function checkAutoLogin() {
 }
 
 // === Запуск приложения ===
+loadTheme();
 if (!checkAutoLogin()) {
   loginScreen.style.display = 'flex';
 }

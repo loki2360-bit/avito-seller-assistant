@@ -224,6 +224,7 @@ async function renderOrders(ordersList) {
     const card = document.createElement('div');
     card.className = 'order-card';
 
+    // Контейнер для ID и возможного комментария
     const idContainer = document.createElement('div');
     idContainer.style.position = 'relative';
     idContainer.style.cursor = 'pointer';
@@ -243,6 +244,40 @@ async function renderOrders(ordersList) {
 
     idContainer.appendChild(idDiv);
 
+    // Переключатель "Принять"
+    const acceptToggle = document.createElement('div');
+    acceptToggle.className = 'accept-toggle-container';
+    acceptToggle.innerHTML = `
+      <span class="accept-label">принять</span>
+      <div class="toggle-switch ${order.is_accepted ? 'active' : ''}" data-id="${order.id}">
+        <div class="toggle-slider"></div>
+      </div>
+    `;
+
+    // Обработчик клика по переключателю
+    acceptToggle.querySelector('.toggle-switch').addEventListener('click', async () => {
+      const orderId = acceptToggle.querySelector('.toggle-switch').dataset.id;
+      const newStatus = !order.is_accepted;
+      
+      try {
+        const { error } = await supabaseClient
+          .from('orders')
+          .update({ is_accepted: newStatus })
+          .eq('id', orderId);
+
+        if (error) throw error;
+
+        // Обновляем локальное состояние
+        order.is_accepted = newStatus;
+        // Обновляем интерфейс
+        acceptToggle.querySelector('.toggle-switch').classList.toggle('active');
+      } catch (error) {
+        console.error('Ошибка обновления статуса:', error);
+        alert('Ошибка при изменении статуса.');
+      }
+    });
+
+    // Выпадающий список для перемещения
     const moveSelect = document.createElement('select');
     moveSelect.className = 'move-select';
     
@@ -285,6 +320,7 @@ async function renderOrders(ordersList) {
     buttonsDiv.appendChild(closeBtn);
 
     card.appendChild(idContainer);
+    card.appendChild(acceptToggle);
     card.appendChild(buttonsDiv);
     ordersContainer.appendChild(card);
   });
@@ -401,7 +437,8 @@ addOrderBtn.addEventListener('click', async () => {
 
     const { error } = await supabaseClient.from('orders').insert({
       order_id: orderId,
-      station: stations[0]
+      station: stations[0],
+      is_accepted: false // По умолчанию не принят
     });
 
     if (error) {

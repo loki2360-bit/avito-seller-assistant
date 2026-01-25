@@ -244,38 +244,52 @@ async function renderOrders(ordersList) {
 
     idContainer.appendChild(idDiv);
 
+    // Проверяем, принят ли заказ на текущем участке
+    const currentStation = order.station;
+    const isAcceptedHere = order.accept_status?.[currentStation] === true;
+
     // Переключатель "Принять"
-    const acceptToggle = document.createElement('div');
-    acceptToggle.className = 'accept-toggle-container';
-    acceptToggle.innerHTML = `
+    const acceptStatus = document.createElement('div');
+    acceptStatus.className = 'accept-status-container';
+    acceptStatus.innerHTML = `
       <span class="accept-label">принять</span>
-      <div class="toggle-switch ${order.is_accepted ? 'active' : ''}" data-id="${order.id}">
+      <div class="toggle-switch ${isAcceptedHere ? 'active' : ''}" data-id="${order.id}">
         <div class="toggle-slider"></div>
       </div>
     `;
 
-    // Обработчик клика по переключателю
-    acceptToggle.querySelector('.toggle-switch').addEventListener('click', async () => {
-      const orderId = acceptToggle.querySelector('.toggle-switch').dataset.id;
-      const newStatus = !order.is_accepted;
-      
-      try {
-        const { error } = await supabaseClient
-          .from('orders')
-          .update({ is_accepted: newStatus })
-          .eq('id', orderId);
+    // Если уже принят на этом участке — блокируем
+    if (isAcceptedHere) {
+      acceptStatus.querySelector('.toggle-switch').style.pointerEvents = 'none';
+      acceptStatus.querySelector('.toggle-slider').style.opacity = '0.8';
+    } else {
+      // Разрешаем нажать только если НЕ принят
+      acceptStatus.querySelector('.toggle-switch').addEventListener('click', async () => {
+        const orderId = acceptStatus.querySelector('.toggle-switch').dataset.id;
+        
+        try {
+          // Получаем текущий статус
+          let newStatus = order.accept_status || {};
+          newStatus[currentStation] = true;
 
-        if (error) throw error;
+          const { error } = await supabaseClient
+            .from('orders')
+            .update({ accept_status: newStatus })
+            .eq('id', orderId);
 
-        // Обновляем локальное состояние
-        order.is_accepted = newStatus;
-        // Обновляем интерфейс
-        acceptToggle.querySelector('.toggle-switch').classList.toggle('active');
-      } catch (error) {
-        console.error('Ошибка обновления статуса:', error);
-        alert('Ошибка при изменении статуса.');
-      }
-    });
+          if (error) throw error;
+
+          // Обновляем локально
+          order.accept_status = newStatus;
+          acceptStatus.querySelector('.toggle-switch').classList.add('active');
+          acceptStatus.querySelector('.toggle-switch').style.pointerEvents = 'none';
+          acceptStatus.querySelector('.toggle-slider').style.opacity = '0.8';
+        } catch (error) {
+          console.error('Ошибка обновления статуса:', error);
+          alert('Ошибка при изменении статуса.');
+        }
+      });
+    }
 
     // Выпадающий список для перемещения
     const moveSelect = document.createElement('select');
@@ -314,14 +328,15 @@ async function renderOrders(ordersList) {
     closeBtn.textContent = 'Закрыть';
     closeBtn.addEventListener('click', () => closeOrder(order.id));
 
-    const buttonsDiv = document.createElement('div');
-    buttonsDiv.className = 'status-buttons';
-    buttonsDiv.appendChild(moveSelect);
-    buttonsDiv.appendChild(closeBtn);
+    // Группируем элементы
+    const rightControls = document.createElement('div');
+    rightControls.className = 'right-controls';
+    rightControls.appendChild(acceptStatus);
+    rightControls.appendChild(moveSelect);
+    rightControls.appendChild(closeBtn);
 
     card.appendChild(idContainer);
-    card.appendChild(acceptToggle);
-    card.appendChild(buttonsDiv);
+    card.appendChild(rightControls);
     ordersContainer.appendChild(card);
   });
 }
@@ -438,7 +453,7 @@ addOrderBtn.addEventListener('click', async () => {
     const { error } = await supabaseClient.from('orders').insert({
       order_id: orderId,
       station: stations[0],
-      is_accepted: false // По умолчанию не принят
+      accept_status: {} // ← пустой объект для независимого статуса
     });
 
     if (error) {

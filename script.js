@@ -1,7 +1,24 @@
+// === ПРОВЕРКА ЗАГРУЗКИ SUPABASE ===
+if (typeof createClient !== 'function') {
+  console.error('❌ Supabase SDK не загружен! Проверьте <script src="...supabase.min.js">');
+  document.getElementById('items-list').innerHTML = 
+    '<p style="color:red; text-align:center;">Ошибка: Supabase не подключён</p>';
+  document.getElementById('create-btn')?.addEventListener('click', () => {
+    alert('Supabase не загружен. Проверьте подключение в index.html.');
+  });
+  window.moveItem = () => alert('Supabase не загружен.');
+  return;
+}
+
 // === Настройки Supabase ===
-// ⚠️ ЗАМЕНИТЕ НА ВАШИ КЛЮЧИ ИЗ SUPABASE
 const SUPABASE_URL = 'https://zitdekerfjocbulmfuyo.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_41ROEqZ74QbA4B6_JASt4w_DeRDGXWR';
+
+// ⚠️ ВАЖНО: ЗАМЕНИТЕ ВЫШЕ НА ВАШИ ДАННЫЕ!
+if (SUPABASE_URL.includes('ваш-проект') || SUPABASE_ANON_KEY.includes('ваш-anon')) {
+  console.warn('⚠️ Осторожно: ключи не изменены! Замените SUPABASE_URL и SUPABASE_ANON_KEY в script.js');
+}
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // === DOM-элементы ===
@@ -12,32 +29,44 @@ const workstationSelect = document.getElementById('workstation');
 const createBtn = document.getElementById('create-btn');
 const itemsList = document.getElementById('items-list');
 
-// === Загрузка данных из Supabase ===
-async function loadItems() {
-  const { data, error } = await supabase
-    .from('items')
-    .select('*')
-    .order('order_number', { ascending: true })
-    .order('item_type', { ascending: true });
-
-  if (error) {
-    console.error('Ошибка загрузки данных:', error);
-    itemsList.innerHTML = '<p style="color:red;">Ошибка подключения к базе</p>';
-    return;
-  }
-
-  renderItems(data || []);
+// === Защита от XSS ===
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
-// === Отображение списка позиций ===
+// === Загрузка данных ===
+async function loadItems() {
+  try {
+    const { data, error } = await supabase
+      .from('items')
+      .select('*')
+      .order('order_number', { ascending: true })
+      .order('item_type', { ascending: true });
+
+    if (error) {
+      console.error('❌ Ошибка запроса:', error);
+      itemsList.innerHTML = `<p style="color:red;">Ошибка: ${error.message}</p>`;
+      return;
+    }
+
+    renderItems(data || []);
+  } catch (err) {
+    console.error('💥 Критическая ошибка:', err);
+    itemsList.innerHTML = `<p style="color:red;">Ошибка выполнения: ${err.message || 'неизвестно'}</p>`;
+  }
+}
+
+// === Отображение списка ===
 function renderItems(items) {
-  const searchTerm = searchInput.value.toLowerCase().trim();
+  const searchTerm = (searchInput.value || '').toLowerCase().trim();
   const filtered = items.filter(item =>
     item.order_number.toLowerCase().includes(searchTerm)
   );
 
   if (filtered.length === 0) {
-    itemsList.innerHTML = '<p>Нет записей</p>';
+    itemsList.innerHTML = '<p>Нет записей. Создайте первую позицию.</p>';
     return;
   }
 
@@ -56,60 +85,77 @@ function renderItems(items) {
   `).join('');
 }
 
-// === Защита от XSS ===
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
 // === Создание новой записи ===
 createBtn.addEventListener('click', async () => {
-  const order = orderNumberInput.value.trim();
+  const order = (orderNumberInput.value || '').trim();
   const type = itemTypeSelect.value;
   const ws = workstationSelect.value;
 
   if (!order) {
-    alert('Введите номер заказа');
+    alert('❗ Введите номер заказа');
     return;
   }
 
-  const { error } = await supabase.from('items').insert({
-    order_number: order,
-    item_type: type,
-    current_workstation: ws
-  });
+  try {
+    const { error } = await supabase.from('items').insert({
+      order_number: order,
+      item_type: type,
+      current_workstation: ws
+    });
 
-  if (error) {
-    console.error('Ошибка создания:', error);
-    alert('Не удалось создать запись');
-  } else {
-    // Оставляем номер для быстрого добавления следующей позиции
-    itemTypeSelect.value = 'наружняя панель';
-    workstationSelect.value = 'распил';
-    loadItems();
+    if (error) {
+      console.error('❌ Ошибка создания:', error);
+      alert(`Не удалось создать: ${error.message}`);
+    } else {
+      console.log('✅ Запись создана:', { order, type, ws });
+      // Оставляем номер для быстрого добавления следующей
+      itemTypeSelect.value = 'наружняя панель';
+      workstationSelect.value = 'распил';
+      loadItems();
+    }
+  } catch (err) {
+    console.error('💥 Ошибка при создании:', err);
+    alert('Системная ошибка. Проверьте консоль (F12).');
   }
 });
 
-// === Перемещение позиции ===
+// === Перемещение ===
 window.moveItem = async (id, newWs) => {
-  const { error } = await supabase
-    .from('items')
-    .update({ current_workstation: newWs })
-    .eq('id', id);
+  try {
+    const { error } = await supabase
+      .from('items')
+      .update({ current_workstation: newWs })
+      .eq('id', id);
 
-  if (error) {
-    console.error('Ошибка перемещения:', error);
-    alert('Не удалось переместить');
-  } else {
-    loadItems();
+    if (error) {
+      console.error('❌ Ошибка перемещения:', error);
+      alert(`Не удалось переместить: ${error.message}`);
+    } else {
+      console.log(`✅ Перемещено: ${id} → ${newWs}`);
+      loadItems();
+    }
+  } catch (err) {
+    console.error('💥 Ошибка перемещения:', err);
+    alert('Ошибка перемещения. Проверьте консоль.');
   }
 };
 
-// === Поиск в реальном времени ===
+// === Поиск ===
 searchInput.addEventListener('input', loadItems);
 
-// === Инициализация приложения ===
+// === Инициализация ===
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('🚀 Приложение запущено. Проверка Supabase...');
+  
+  // Проверка подключения
+  supabase.auth.getSession().then(({ data, error }) => {
+    if (error) {
+      console.warn('ℹ️ Аутентификация не требуется (анонимный доступ)');
+    } else {
+      console.log('🔐 Сессия: OK');
+    }
+  });
+
+  // Загрузка данных
   loadItems();
 });

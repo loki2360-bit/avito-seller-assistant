@@ -2,115 +2,52 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ZyNymbo — Трекер задач</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Оператор</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="icon-192.png" />
+  <meta name="theme-color" content="#c0392b" />
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <!-- Экран входа -->
-  <div id="login-screen" class="auth-screen">
-    <div class="auth-form">
-      <h2>Вход в систему</h2>
-      <input type="password" id="login-password" placeholder="Пароль" />
-      <button id="login-btn">Войти</button>
-      <p id="login-error" style="color: red; margin-top: 8px; display: none;"></p>
+  <div class="container">
+    <h1>Личный кабинет оператора</h1>
+
+    <!-- Поиск -->
+    <input type="text" id="search-input" placeholder="Поиск по номеру заказа" />
+
+    <!-- Форма создания -->
+    <div class="form">
+      <input type="text" id="order-number" placeholder="Номер заказа" />
+      <select id="item-type">
+        <option value="наружняя панель">наружняя панель</option>
+        <option value="внутренняя панель">внутренняя панель</option>
+        <option value="откосы">откосы</option>
+        <option value="наличники">наличники</option>
+        <option value="внутренние наличники">внутренние наличники</option>
+        <option value="импасы">импасы</option>
+        <option value="фрумуги">фрумуги</option>
+        <option value="упаковка">упаковка</option>
+      </select>
+      <select id="workstation">
+        <option value="распил">распил</option>
+        <option value="чпу">чпу</option>
+        <option value="фанеровка">фанеровка</option>
+        <option value="шлифовка">шлифовка</option>
+        <option value="сборка">сборка</option>
+        <option value="покраска">покраска</option>
+        <option value="пвх">пвх</option>
+        <option value="упаковка">упаковка</option>
+      </select>
+      <button id="create-btn">+</button>
     </div>
+
+    <!-- Список позиций -->
+    <div id="items-list"></div>
   </div>
 
-  <!-- Основное приложение -->
-  <div id="app" style="display: none;">
-    <div class="container">
-      <aside class="sidebar">
-        <div class="user-role" id="user-role">Оператор</div>
-        <button id="logout-btn" style="margin-top: 8px; padding: 6px; font-size: 12px;">Выйти</button>
-        <h2>Участки</h2>
-        <ul id="stations-list"></ul>
-        <div id="admin-controls" style="display: none;">
-          <input type="text" id="new-station" placeholder="Новый участок" />
-          <button id="add-station">Добавить</button>
-        </div>
-        
-        <!-- Выбор эмодзи (только для премиум-оператора) -->
-        <div id="emoji-selector" style="display: none; margin-top: 16px;">
-          <div>Выберите значок:</div>
-          <div class="emoji-options">
-            <span data-emoji="🌟">🌟</span>
-            <span data-emoji="🔥">🔥</span>
-            <span data-emoji="💎">💎</span>
-            <span data-emoji="🚀">🚀</span>
-          </div>
-        </div>
-
-        <!-- Кнопка настроек -->
-        <div class="settings-section" style="margin-top: auto; padding-top: 16px;">
-          <button id="settings-btn" class="settings-btn">⚙️</button>
-          
-          <!-- Меню тем -->
-          <div id="theme-menu" class="theme-menu" style="display: none;">
-            <div class="theme-option" data-theme="red">🔴 Красная тема</div>
-            <div class="theme-option" data-theme="green">🟢 Зелёная тема</div>
-          </div>
-        </div>
-      </aside>
-
-      <main class="main-content">
-        <div class="header">
-          <div class="header-left">
-            <button id="add-order">добавить</button>
-            <input type="text" id="search-input" placeholder="поиск по №" />
-            <div class="position-filter-wrapper">
-              <select id="position-filter">
-                <option value="">Все</option>
-                <option value="внутренняя панель">Внутренняя панель</option>
-                <option value="наружная панель">Наружная панель</option>
-                <option value="наличники">Наличники</option>
-                <option value="откосы">Откосы</option>
-                <option value="фрамуга">Фрамуга</option>
-                <option value="импосты">Импосты</option>
-                <option value="полотна">Полотна</option>
-                <option value="коробки">Коробки</option>
-                <option value="фасады">Фасады</option>
-              </select>
-            </div>
-          </div>
-          <div class="header-right">
-            <div class="app-title">ZyNymbo</div>
-          </div>
-        </div>
-        <div class="orders-wrapper">
-          <div id="orders-container" class="orders-container"></div>
-        </div>
-      </main>
-    </div>
-  </div>
-
-  <!-- Модальное окно создания заказа -->
-  <div id="create-order-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-      <h4>Создать заказ</h4>
-      <input type="text" id="modal-order-id" placeholder="Номер заказа" />
-      
-      <div class="position-group">
-        <div class="position-label">Выберите позицию:</div>
-        <div class="position-options">
-          <button type="button" class="position-btn" data-value="внутренняя панель">Внутренняя панель</button>
-          <button type="button" class="position-btn" data-value="наружная панель">Наружная панель</button>
-          <button type="button" class="position-btn" data-value="наличники">Наличники</button>
-          <button type="button" class="position-btn" data-value="откосы">Откосы</button>
-          <button type="button" class="position-btn" data-value="фрамуга">Фрамуга</button>
-          <button type="button" class="position-btn" data-value="импосты">Импосты</button>
-          <button type="button" class="position-btn" data-value="полотна">Полотна</button>
-          <button type="button" class="position-btn" data-value="коробки">Коробки</button>
-          <button type="button" class="position-btn" data-value="фасады">Фасады</button>
-        </div>
-      </div>
-      
-      <button id="create-order-ok">ОК</button>
-      <button id="create-order-cancel">Отмена</button>
-    </div>
-  </div>
-
-  <script src="main.js"></script>
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.40.0/dist/umd/supabase.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

@@ -3,20 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Оператор</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/png" href="icon-192.png" />
-  <meta name="theme-color" content="#c0392b" />
+  <title>Личный кабинет оператора</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
     <h1>Личный кабинет оператора</h1>
 
-    <!-- Поиск -->
     <input type="text" id="search-input" placeholder="Поиск по номеру заказа" />
 
-    <!-- Форма создания -->
     <div class="form">
       <input type="text" id="order-number" placeholder="Номер заказа" />
       <select id="item-type">
@@ -42,11 +37,10 @@
       <button id="create-btn">+</button>
     </div>
 
-    <!-- Список позиций -->
     <div id="items-list"></div>
   </div>
 
-  <!-- Supabase SDK -->
+  <!-- 🔑 КЛЮЧЕВОЙ ШАГ: Supabase SDK ДО script.js -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.40.0/dist/umd/supabase.min.js"></script>
   <script src="script.js"></script>
 </body>

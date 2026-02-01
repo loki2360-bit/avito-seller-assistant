@@ -1,18 +1,45 @@
-<section class="form-section">
-  <h2>➕ Добавить конкурента</h2>
-  <form id="competitorForm">
-    <select id="category" required>
-      <option value="">— Выберите тип —</option>
-      <option value="продажа">Продажа техники</option>
-      <option value="ремонт">Ремонт</option>
-    </select>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Avito Seller Assistant</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#e74c3c" />
+</head>
+<body>
+  <div class="container">
+    <h1>🛠️ Avito Seller Assistant</h1>
 
-    <input type="text" id="deviceType" placeholder="Тип устройства (например: iPhone 13, MacBook Air)" required />
-    <input type="url" id="avitoUrl" placeholder="Ссылка на объявление Avito (опционально)" />
-    <input type="text" id="title" placeholder="Краткое описание услуги/товара" required />
-    <input type="number" id="price" placeholder="Цена (₽)" required />
-    <input type="text" id="city" placeholder="Город или район" />
-    <textarea id="notes" placeholder="Заметки: отзывы, гарантия, скорость, недостатки..."></textarea>
-    <button type="submit">Сохранить</button>
-  </form>
-</section>
+    <section class="form-section">
+      <h2>➕ Добавить конкурента</h2>
+      <form id="competitorForm">
+        <select id="category" required>
+          <option value="">— Выберите тип —</option>
+          <option value="продажа">Продажа техники</option>
+          <option value="ремонт">Ремонт</option>
+        </select>
+        <input type="text" id="deviceType" placeholder="Тип устройства (например: iPhone 13)" required />
+        <input type="url" id="avitoUrl" placeholder="Ссылка на объявление Avito (опц.)" />
+        <input type="text" id="title" placeholder="Краткое описание" required />
+        <input type="number" id="price" placeholder="Цена (₽)" required />
+        <input type="text" id="city" placeholder="Город или район" />
+        <textarea id="notes" placeholder="Заметки: отзывы, гарантия, скорость..."></textarea>
+        <button type="submit">Сохранить</button>
+      </form>
+    </section>
+
+    <section class="list-section">
+      <div class="controls">
+        <h2>📋 Мои конкуренты (<span id="count">0</span>)</h2>
+        <button id="exportBtn">📥 Экспорт CSV</button>
+        <button id="clearBtn" style="margin-left: 10px; background: #e74c3c;">🗑️ Очистить</button>
+      </div>
+      <div id="competitorsList"></div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

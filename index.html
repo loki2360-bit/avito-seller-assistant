@@ -42,8 +42,8 @@
       </form>
     </section>
 
-    <!-- Список конкурентов -->
-    <section class="list-section">
+    <!-- Основной список конкурентов -->
+    <section class="list-section" id="mainSection">
       <div class="controls">
         <h2>📋 Мои конкуренты (<span id="count">0</span>)</h2>
         <div>
@@ -54,8 +54,349 @@
       </div>
       <div id="competitorsList"></div>
     </section>
+
+    <!-- Вкладка предзаказов -->
+    <section class="list-section" id="preordersSection" style="display: none;">
+      <div class="controls">
+        <h2>📋 Предзаказы (<span id="preordersCount">0</span>)</h2>
+        <div>
+          <!-- НОВАЯ КНОПКА ИМПОРТА -->
+          <button id="importJsonBtn">📤 Импорт JSON</button>
+          <button id="exportPreordersBtn">📥 Экспорт CSV</button>
+          <button id="clearPreordersBtn" style="margin-left: 10px; background: #e74c3c;">🗑️ Очистить</button>
+        </div>
+      </div>
+      <div id="preordersList"></div>
+    </section>
+
+    <!-- Переключатели вкладок -->
+    <div style="text-align: center; margin-top: 20px;">
+      <button id="mainTabBtn" class="tab-btn active">Основные</button>
+      <button id="preordersTabBtn" class="tab-btn">Предзаказы</button>
+    </div>
+
+    <!-- Скрытый файловый ввод для импорта -->
+    <input type="file" id="jsonFileInput" accept=".json" style="display: none;" />
+
   </div>
 
-  <script src="app.js"></script>
+  <script>
+    // === Хранилище данных ===
+    let competitors = JSON.parse(localStorage.getItem('competitors')) || [];
+    let templates = JSON.parse(localStorage.getItem('templates')) || [];
+    let preorders = JSON.parse(localStorage.getItem('preorders')) || [];
+
+    // === DOM элементы ===
+    const competitorForm = document.getElementById('competitorForm');
+    const templateForm = document.getElementById('templateForm');
+    const competitorsList = document.getElementById('competitorsList');
+    const templatesList = document.getElementById('templatesList');
+    const countElement = document.getElementById('count');
+    const preordersList = document.getElementById('preordersList');
+    const preordersCount = document.getElementById('preordersCount');
+
+    // Кнопки переключения вкладок
+    const mainTabBtn = document.getElementById('mainTabBtn');
+    const preordersTabBtn = document.getElementById('preordersTabBtn');
+    const mainSection = document.getElementById('mainSection');
+    const preordersSection = document.getElementById('preordersSection');
+
+    // Кнопки экспорта/очистки
+    const exportBtn = document.getElementById('exportBtn');
+    const copyTableBtn = document.getElementById('copyTableBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const exportPreordersBtn = document.getElementById('exportPreordersBtn');
+    const clearPreordersBtn = document.getElementById('clearPreordersBtn');
+
+    // === Инициализация ===
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCompetitors();
+      renderTemplates();
+      renderPreorders();
+      updateCount();
+      updatePreordersCount();
+    });
+
+    // === Переключение вкладок ===
+    mainTabBtn.addEventListener('click', () => {
+      mainSection.style.display = 'block';
+      preordersSection.style.display = 'none';
+      mainTabBtn.classList.add('active');
+      preordersTabBtn.classList.remove('active');
+    });
+
+    preordersTabBtn.addEventListener('click', () => {
+      mainSection.style.display = 'none';
+      preordersSection.style.display = 'block';
+      preordersTabBtn.classList.add('active');
+      mainTabBtn.classList.remove('active');
+      renderPreorders();
+    });
+
+    // === Добавление конкурента ===
+    competitorForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const competitor = {
+        id: Date.now(),
+        category: document.getElementById('category').value,
+        deviceType: document.getElementById('deviceType').value,
+        avitoUrl: document.getElementById('avitoUrl').value,
+        title: document.getElementById('title').value,
+        price: parseFloat(document.getElementById('price').value),
+        city: document.getElementById('city').value,
+        notes: document.getElementById('notes').value,
+        date: new Date().toISOString()
+      };
+      competitors.push(competitor);
+      saveCompetitors();
+      renderCompetitors();
+      updateCount();
+      competitorForm.reset();
+    });
+
+    // === Добавление шаблона ===
+    templateForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const template = {
+        id: Date.now(),
+        title: document.getElementById('templateTitle').value,
+        text: document.getElementById('templateText').value,
+        date: new Date().toISOString()
+      };
+      templates.push(template);
+      saveTemplates();
+      renderTemplates();
+      templateForm.reset();
+    });
+
+    // === Сохранение в localStorage ===
+    function saveCompetitors() {
+      localStorage.setItem('competitors', JSON.stringify(competitors));
+    }
+    function saveTemplates() {
+      localStorage.setItem('templates', JSON.stringify(templates));
+    }
+    function savePreorders() {
+      localStorage.setItem('preorders', JSON.stringify(preorders));
+    }
+
+    // === Рендеринг списков ===
+    function renderCompetitors() {
+      if (!competitorsList) return;
+      if (competitors.length === 0) {
+        competitorsList.innerHTML = '<p class="empty-message">Нет добавленных конкурентов</p>';
+        return;
+      }
+      const sorted = [...competitors].sort((a, b) => new Date(b.date) - new Date(a.date));
+      competitorsList.innerHTML = sorted.map(c => `
+        <div class="item">
+          <strong>${c.deviceType}</strong> — ${c.title}<br>
+          <small>${c.category} • ${c.city || '—'} • ${c.price.toLocaleString()} ₽</small><br>
+          ${c.notes ? `<em>📝 ${c.notes}</em><br>` : ''}
+          ${c.avitoUrl ? `<a href="${c.avitoUrl}" target="_blank">🔗 Avito</a>` : ''}
+          <button onclick="deleteCompetitor(${c.id})" style="float:right; margin-top:5px;">🗑️</button>
+        </div>
+      `).join('');
+    }
+
+    function renderTemplates() {
+      if (!templatesList) return;
+      if (templates.length === 0) {
+        templatesList.innerHTML = '<p class="empty-message">Нет шаблонов</p>';
+        return;
+      }
+      templatesList.innerHTML = templates.map(t => `
+        <div class="item">
+          <strong>${t.title}</strong><br>
+          <pre style="white-space: pre-wrap; font-size: 0.9em;">${t.text}</pre>
+          <button onclick="deleteTemplate(${t.id})" style="float:right;">🗑️</button>
+        </div>
+      `).join('');
+    }
+
+    function renderPreorders() {
+      if (!preordersList) return;
+      if (preorders.length === 0) {
+        preordersList.innerHTML = '<p class="empty-message">Нет предзаказов</p>';
+        return;
+      }
+      const sorted = [...preorders].sort((a, b) => new Date(b.date) - new Date(a.date));
+      preordersList.innerHTML = sorted.map(p => `
+        <div class="item">
+          <strong>${p.deviceType || p.title || 'Без названия'}</strong><br>
+          <small>${p.price ? `${p.price.toLocaleString()} ₽` : ''}${p.city ? ` • ${p.city}` : ''}</small><br>
+          ${p.notes ? `<em>📝 ${p.notes}</em><br>` : ''}
+          <button onclick="moveToMain(${p.id})" style="margin-right: 5px;">➡️ В основные</button>
+          <button onclick="deletePreorder(${p.id})" style="float:right;">🗑️</button>
+        </div>
+      `).join('');
+    }
+
+    // === Обновление счетчиков ===
+    function updateCount() {
+      countElement.textContent = competitors.length;
+    }
+    function updatePreordersCount() {
+      preordersCount.textContent = preorders.length;
+    }
+
+    // === Удаление ===
+    window.deleteCompetitor = (id) => {
+      competitors = competitors.filter(c => c.id !== id);
+      saveCompetitors();
+      renderCompetitors();
+      updateCount();
+    };
+    window.deleteTemplate = (id) => {
+      templates = templates.filter(t => t.id !== id);
+      saveTemplates();
+      renderTemplates();
+    };
+    window.deletePreorder = (id) => {
+      preorders = preorders.filter(p => p.id !== id);
+      savePreorders();
+      renderPreorders();
+      updatePreordersCount();
+    };
+
+    // === Перемещение в основные ===
+    window.moveToMain = (id) => {
+      const order = preorders.find(p => p.id === id);
+      if (order) {
+        competitors.push(order);
+        preorders = preorders.filter(p => p.id !== id);
+        saveCompetitors();
+        savePreorders();
+        renderCompetitors();
+        renderPreorders();
+        updateCount();
+        updatePreordersCount();
+      }
+    };
+
+    // === Экспорт (упрощённый) ===
+    exportBtn?.addEventListener('click', () => {
+      const csv = ['Устройство,Описание,Цена,Город,Тип,Ссылка,Заметки'];
+      competitors.forEach(c => {
+        csv.push([
+          `"${c.deviceType}"`,
+          `"${c.title}"`,
+          c.price,
+          `"${c.city || ''}"`,
+          `"${c.category}"`,
+          `"${c.avitoUrl || ''}"`,
+          `"${c.notes || ''}"`
+        ].join(','));
+      });
+      downloadFile('competitors.csv', csv.join('\n'), 'text/csv');
+    });
+
+    exportPreordersBtn?.addEventListener('click', () => {
+      const csv = ['Устройство,Описание,Цена,Город,Заметки'];
+      preorders.forEach(p => {
+        csv.push([
+          `"${p.deviceType || ''}"`,
+          `"${p.title || ''}"`,
+          p.price || '',
+          `"${p.city || ''}"`,
+          `"${p.notes || ''}"`
+        ].join(','));
+      });
+      downloadFile('preorders.csv', csv.join('\n'), 'text/csv');
+    });
+
+    // === Очистка ===
+    clearBtn?.addEventListener('click', () => {
+      if (confirm('Очистить все основные записи?')) {
+        competitors = [];
+        saveCompetitors();
+        renderCompetitors();
+        updateCount();
+      }
+    });
+
+    clearPreordersBtn?.addEventListener('click', () => {
+      if (confirm('Очистить все предзаказы?')) {
+        preorders = [];
+        savePreorders();
+        renderPreorders();
+        updatePreordersCount();
+      }
+    });
+
+    // === Вспомогательные функции ===
+    function downloadFile(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // ==============================
+    // === НОВАЯ ФУНКЦИЯ: ИМПОРТ JSON В ПРЕДЗАКАЗЫ ===
+    // ==============================
+
+    const importJsonBtn = document.getElementById('importJsonBtn');
+    const jsonFileInput = document.getElementById('jsonFileInput');
+
+    importJsonBtn?.addEventListener('click', () => {
+      jsonFileInput.click();
+    });
+
+    jsonFileInput?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        try {
+          const importedOrders = JSON.parse(event.target.result);
+
+          if (!Array.isArray(importedOrders)) {
+            alert('Файл должен содержать массив заказов!');
+            return;
+          }
+
+          // Добавляем в предзаказы
+          preorders = [...preorders, ...importedOrders];
+          savePreorders();
+          renderPreorders();
+          updatePreordersCount();
+
+          alert(`Успешно загружено ${importedOrders.length} заказов!`);
+        } catch (err) {
+          console.error(err);
+          alert('Ошибка при чтении JSON-файла:\n' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+  </script>
+
+  <style>
+    /* Минимальные стили для вкладок, если их нет в style.css */
+    .tab-btn {
+      padding: 8px 16px;
+      margin: 0 5px;
+      border: none;
+      background: #f1f1f1;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .tab-btn.active {
+      background: #e74c3c;
+      color: white;
+    }
+    .empty-message {
+      color: #888;
+      font-style: italic;
+    }
+  </style>
 </body>
 </html>

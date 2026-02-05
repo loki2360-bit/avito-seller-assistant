@@ -522,54 +522,32 @@
     TIME: 'Время'
   };
 
-  // === Звуковые уведомления ===
-  function playSound(type) {
+  // === Звуковой сигнал: чёткий двойной звонок ===
+  function playBellSound() {
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) return;
 
       const audioContext = new AudioContext();
-      
-      if (type === 'start') {
-        // Мягкий восходящий звук
+      const frequencies = [600, 800]; // два тона
+      let time = audioContext.currentTime;
+
+      frequencies.forEach((freq, i) => {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-        
+
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
-        
+
         oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.6);
-        
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.6);
-      } 
-      else if (type === 'end') {
-        // Чёткий двойной звонок
-        const frequencies = [600, 800];
-        let time = audioContext.currentTime;
-        
-        frequencies.forEach((freq, i) => {
-          const oscillator = audioContext.createOscillator();
-          const gainNode = audioContext.createGain();
-          
-          oscillator.connect(gainNode);
-          gainNode.connect(audioContext.destination);
-          
-          oscillator.type = 'sine';
-          oscillator.frequency.value = freq;
-          gainNode.gain.setValueAtTime(0.2, time);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, time + 0.3);
-          
-          oscillator.start(time);
-          oscillator.stop(time + 0.3);
-          time += 0.25;
-        });
-      }
+        oscillator.frequency.value = freq;
+        gainNode.gain.setValueAtTime(0.2, time);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, time + 0.3);
+
+        oscillator.start(time);
+        oscillator.stop(time + 0.3);
+        time += 0.25;
+      });
     } catch (e) {
       console.warn('Звук не поддерживается:', e);
     }
@@ -728,7 +706,7 @@
     }
   }
 
-  // === Смена с ЗВУКОМ ===
+  // === Смена с ОДИНАКОВЫМ звуком ===
   function startShift() {
     const shift = getCurrentShift();
     if (shift && shift.active) {
@@ -738,7 +716,7 @@
     const newShift = { id: Date.now(), startedAt: new Date().toISOString(), active: true };
     setCurrentShift(newShift);
     
-    playSound('start'); // 🔊
+    playBellSound(); // 🔔 Чёткий звонок при НАЧАЛЕ
     alert('✅ Смена начата!');
     updateUI();
   }
@@ -758,12 +736,12 @@
     shift.finalAmount = finalAmount;
     setCurrentShift(shift);
     
-    playSound('end'); // 🔊
+    playBellSound(); // 🔔 Тот же звонок при ЗАВЕРШЕНИИ
     alert(`✅ Смена завершена!\nЗаработано: ${finalAmount.toFixed(2)} ₽`);
     updateUI();
   }
 
-  // === Основной заказ ===
+  // === Остальной код без изменений ===
   function createMainOrder() {
     const num = document.getElementById('orderNum').value.trim();
     if (!num) { alert('Укажите № заказа'); return; }
@@ -813,7 +791,6 @@
     updateMainFormFields();
   }
 
-  // === Предзаказ ===
   function createPreorder() {
     const num = document.getElementById('preOrderNum').value.trim();
     if (!num) { alert('Укажите № предзаказа'); return; }
@@ -857,7 +834,6 @@
     updatePreorderFormFields();
   }
 
-  // === Принятие предзаказа ===
   function acceptPreorder(preorderId) {
     const preorders = loadPreorders();
     const preorderIndex = preorders.findIndex(p => p.id === preorderId);
@@ -888,7 +864,6 @@
     renderPreorders();
   }
 
-  // === Рендер предзаказов ===
   function renderPreorders() {
     const preorders = loadPreorders();
     const container = document.getElementById('preordersList');
@@ -928,7 +903,6 @@
     container.innerHTML = html;
   }
 
-  // === История по дате ===
   function showOrdersByDate() {
     const dateInput = document.getElementById('viewDate').value;
     if (!dateInput) {
@@ -1018,7 +992,6 @@
     URL.revokeObjectURL(url);
   }
 
-  // === Экспорт в JSON ===
   function saveOrdersToJSON() {
     const dateInput = document.getElementById('viewDate').value;
     if (!dateInput) {
@@ -1046,7 +1019,6 @@
     URL.revokeObjectURL(url);
   }
 
-  // === Импорт JSON в предзаказы ===
   document.getElementById('jsonImportInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -1095,7 +1067,6 @@
     reader.readAsText(file);
   });
 
-  // === Инициализация ===
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('viewDate').value = todayYMD();
 

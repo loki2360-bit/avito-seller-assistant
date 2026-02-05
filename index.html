@@ -1,527 +1,214 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Распознавание заказ-нарядов</title>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            position: relative;
-        }
-
-        .header h1 {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-
-        .main-content {
-            padding: 30px;
-        }
-
-        .photo-section {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .camera-container {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto 20px;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        #video {
-            width: 100%;
-            height: 400px;
-            object-fit: cover;
-            background: #333;
-        }
-
-        .camera-controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4);
-        }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(86, 171, 47, 0.6);
-        }
-
-        .btn-telegram {
-            background: linear-gradient(135deg, #0088cc 0%, #00bfff 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(0, 136, 204, 0.4);
-        }
-
-        .btn-telegram:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 136, 204, 0.6);
-        }
-
-        .orders-list {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .orders-list h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-        }
-
-        .order-item {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-left: 5px solid #667eea;
-            transition: all 0.3s ease;
-        }
-
-        .order-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .order-number {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .order-date {
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .order-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .detail-item {
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .detail-label {
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-
-        .detail-value {
-            color: #333;
-            font-size: 0.95em;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 40px;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background: #e0e0e0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .progress {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .status-message {
-            text-align: center;
-            margin-top: 15px;
-            font-weight: 600;
-            color: #667eea;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 20px;
-            }
-            
-            #video {
-                height: 300px;
-            }
-            
-            .btn {
-                padding: 10px 20px;
-                font-size: 14px;
-            }
-            
-            .order-details {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Заказ-наряд по фото</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui; }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #f5f7fa;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: #2c3e50;
+    }
+    .photo-preview {
+      width: 100%;
+      height: 200px;
+      background: #ddd;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .photo-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: #3498db;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      cursor: pointer;
+    }
+    .btn:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .orders-list {
+      margin-top: 32px;
+    }
+    .order-item {
+      background: white;
+      padding: 16px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📸 Распознавание заказ-нарядов</h1>
-            <p>Сделайте фото и автоматически добавьте заказ в список</p>
-        </div>
+  <div class="container">
+    <h1>📸 Новый заказ-наряд</h1>
 
-        <div class="main-content">
-            <div class="photo-section">
-                <h2>📷 Сделайте фото заказ-наряда</h2>
-                <div class="camera-container">
-                    <video id="video" autoplay playsinline></video>
-                </div>
-                
-                <div class="camera-controls">
-                    <button id="startCamera" class="btn btn-primary">
-                        <i>📷</i> Включить камеру
-                    </button>
-                    <button id="takePhoto" class="btn btn-success" disabled>
-                        <i>✨</i> Сделать фото
-                    </button>
-                    <button id="sendTelegram" class="btn btn-telegram" disabled>
-                        <i>✈️</i> Отправить в Telegram
-                    </button>
-                </div>
-
-                <div class="loading" id="loading">
-                    <div class="spinner"></div>
-                    <p>Распознавание текста...</p>
-                    <div class="progress-bar">
-                        <div class="progress" id="progressBar"></div>
-                    </div>
-                    <p class="status-message" id="statusMessage"></p>
-                </div>
-            </div>
-
-            <div class="orders-list">
-                <h2>📋 Список заказов</h2>
-                <div id="ordersContainer">
-                    <!-- Заказы будут добавляться сюда -->
-                </div>
-            </div>
-        </div>
+    <div class="photo-preview" id="photoPreview">
+      <span>Сделайте фото</span>
     </div>
 
-    <script>
-        let stream = null;
-        let currentPhoto = null;
-        const orders = JSON.parse(localStorage.getItem('orders')) || [];
-        
-        const video = document.getElementById('video');
-        const startCameraBtn = document.getElementById('startCamera');
-        const takePhotoBtn = document.getElementById('takePhoto');
-        const sendTelegramBtn = document.getElementById('sendTelegram');
-        const loading = document.getElementById('loading');
-        const progressBar = document.getElementById('progressBar');
-        const statusMessage = document.getElementById('statusMessage');
-        const ordersContainer = document.getElementById('ordersContainer');
+    <button id="takePhotoBtn" class="btn">📷 Сфотографировать заказ-наряд</button>
 
-        // Инициализация при загрузке
-        document.addEventListener('DOMContentLoaded', () => {
-            renderOrders();
-        });
+    <div class="form-group">
+      <label for="orderNumber">Номер заказа</label>
+      <input type="text" id="orderNumber" placeholder="Например: №12345">
+    </div>
 
-        // Запуск камеры
-        startCameraBtn.addEventListener('click', async () => {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment' } 
-                });
-                video.srcObject = stream;
-                takePhotoBtn.disabled = false;
-                startCameraBtn.disabled = true;
-                statusMessage.textContent = 'Камера активна ✅';
-            } catch (error) {
-                console.error('Ошибка доступа к камере:', error);
-                alert('Не удалось получить доступ к камере. Проверьте разрешения.');
-            }
-        });
+    <div class="form-group">
+      <label for="amount">Сумма (₽)</label>
+      <input type="number" id="amount" placeholder="15000">
+    </div>
 
-        // Сделать фото
-        takePhotoBtn.addEventListener('click', () => {
-            // Создаем скрытый canvas для захвата фото
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            currentPhoto = canvas.toDataURL('image/jpeg');
-            processPhoto(currentPhoto);
-        });
+    <div class="form-group">
+      <label for="customer">Клиент (опционально)</label>
+      <input type="text" id="customer" placeholder="Иван Петров">
+    </div>
 
-        // Отправка в Telegram
-        sendTelegramBtn.addEventListener('click', () => {
-            if (currentPhoto) {
-                // Здесь можно реализовать отправку фото в Telegram
-                // Для примера просто покажем уведомление
-                alert('Фото готово к отправке в Telegram!\n\nВ реальном приложении здесь будет интеграция с Telegram Bot API.');
-            }
-        });
+    <button id="saveOrderBtn" class="btn" style="background: #2ecc71;" disabled>
+      ✅ Сохранить заказ
+    </button>
 
-        // Обработка фото с распознаванием текста
-        async function processPhoto(photoData) {
-            loading.style.display = 'block';
-            takePhotoBtn.disabled = true;
-            sendTelegramBtn.disabled = true;
-            
-            try {
-                statusMessage.textContent = 'Загрузка OCR...';
-                progressBar.style.width = '20%';
-                
-                // Используем Tesseract.js для распознавания текста
-                const { createWorker } = Tesseract;
-                const worker = await createWorker('rus');
-                
-                statusMessage.textContent = 'Распознавание текста...';
-                progressBar.style.width = '40%';
-                
-                const result = await worker.recognize(photoData);
-                await worker.terminate();
-                
-                progressBar.style.width = '80%';
-                statusMessage.textContent = 'Обработка данных...';
-                
-                // Парсим распознанный текст
-                const orderData = parseOrderText(result.data.text);
-                
-                if (orderData) {
-                    // Добавляем заказ в список
-                    const newOrder = {
-                        id: Date.now(),
-                        ...orderData,
-                        photo: photoData,
-                        date: new Date().toISOString()
-                    };
-                    
-                    orders.unshift(newOrder);
-                    localStorage.setItem('orders', JSON.stringify(orders));
-                    
-                    renderOrders();
-                    
-                    statusMessage.textContent = '✅ Заказ успешно добавлен!';
-                    progressBar.style.width = '100%';
-                    
-                    // Очищаем текущее фото
-                    currentPhoto = null;
-                    sendTelegramBtn.disabled = false;
-                } else {
-                    throw new Error('Не удалось распознать данные заказа');
-                }
-                
-            } catch (error) {
-                console.error('Ошибка обработки фото:', error);
-                statusMessage.textContent = '❌ Ошибка распознавания';
-                alert('Не удалось распознать данные. Попробуйте сделать фото четче.');
-            } finally {
-                setTimeout(() => {
-                    loading.style.display = 'none';
-                    takePhotoBtn.disabled = false;
-                    progressBar.style.width = '0%';
-                }, 1500);
-            }
-        }
+    <div class="orders-list">
+      <h2>📋 Мои заказы</h2>
+      <div id="ordersContainer"></div>
+    </div>
+  </div>
 
-        // Парсинг текста заказ-наряда
-        function parseOrderText(text) {
-            const lines = text.split('\n').filter(line => line.trim());
-            
-            // Пример структуры заказ-наряда
-            // Можно адаптировать под ваш формат
-            const order = {
-                number: '',
-                customer: '',
-                phone: '',
-                address: '',
-                items: [],
-                total: 0
-            };
-            
-            // Ищем номер заказа
-            const numberMatch = text.match(/№\s*(\d+)/i) || text.match(/заказ\s*(\d+)/i);
-            if (numberMatch) order.number = numberMatch[1];
-            
-            // Ищем имя клиента
-            const nameMatch = text.match(/клиент[:\s]+([^\n]+)/i);
-            if (nameMatch) order.customer = nameMatch[1].trim();
-            
-            // Ищем телефон
-            const phoneMatch = text.match(/тел[:\s]+([0-9\s\-\+\(\)]+)/i);
-            if (phoneMatch) order.phone = phoneMatch[1].trim();
-            
-            // Ищем адрес
-            const addressMatch = text.match(/адрес[:\s]+([^\n]+)/i);
-            if (addressMatch) order.address = addressMatch[1].trim();
-            
-            // Ищем сумму
-            const totalMatch = text.match(/итого[:\s]+([0-9\s]+)/i) || 
-                              text.match(/сумма[:\s]+([0-9\s]+)/i);
-            if (totalMatch) {
-                order.total = parseInt(totalMatch[1].replace(/\s/g, ''));
-            }
-            
-            // Если не нашли номер заказа, генерируем его
-            if (!order.number) {
-                order.number = `ORD-${Date.now().toString().slice(-6)}`;
-            }
-            
-            // Если не нашли клиента, используем "Неизвестный клиент"
-            if (!order.customer) {
-                order.customer = 'Неизвестный клиент';
-            }
-            
-            return order;
-        }
+  <script>
+    let currentPhoto = null;
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
 
-        // Отображение списка заказов
-        function renderOrders() {
-            if (orders.length === 0) {
-                ordersContainer.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">Нет заказов</p>';
-                return;
-            }
-            
-            ordersContainer.innerHTML = orders.map(order => {
-                const date = new Date(order.date);
-                const formattedDate = date.toLocaleDateString('ru-RU') + ' ' + 
-                                     date.toLocaleTimeString('ru-RU');
-                
-                return `
-                    <div class="order-item">
-                        <div class="order-header">
-                            <span class="order-number">Заказ #${order.number}</span>
-                            <span class="order-date">${formattedDate}</span>
-                        </div>
-                        <div class="order-details">
-                            <div class="detail-item">
-                                <div class="detail-label">Клиент</div>
-                                <div class="detail-value">${order.customer}</div>
-                            </div>
-                            ${order.phone ? `
-                            <div class="detail-item">
-                                <div class="detail-label">Телефон</div>
-                                <div class="detail-value">${order.phone}</div>
-                            </div>` : ''}
-                            ${order.address ? `
-                            <div class="detail-item">
-                                <div class="detail-label">Адрес</div>
-                                <div class="detail-value">${order.address}</div>
-                            </div>` : ''}
-                            <div class="detail-item">
-                                <div class="detail-label">Сумма</div>
-                                <div class="detail-value">${order.total.toLocaleString('ru-RU')} ₽</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
+    const takePhotoBtn = document.getElementById('takePhotoBtn');
+    const saveOrderBtn = document.getElementById('saveOrderBtn');
+    const photoPreview = document.getElementById('photoPreview');
+    const orderNumberInput = document.getElementById('orderNumber');
+    const amountInput = document.getElementById('amount');
+    const customerInput = document.getElementById('customer');
+    const ordersContainer = document.getElementById('ordersContainer');
 
-        // Очистка потока камеры при закрытии страницы
-        window.addEventListener('beforeunload', () => {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-        });
-    </script>
+    // Инициализация
+    renderOrders();
+
+    // Съёмка фото
+    takePhotoBtn.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment'; // открыть камеру на мобильных
+
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          currentPhoto = ev.target.result;
+          photoPreview.innerHTML = `<img src="${currentPhoto}" alt="Фото заказа">`;
+          saveOrderBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+      };
+
+      input.click();
+    });
+
+    // Сохранение заказа
+    saveOrderBtn.addEventListener('click', () => {
+      const number = orderNumberInput.value.trim();
+      const amount = parseFloat(amountInput.value);
+      const customer = customerInput.value.trim();
+
+      if (!number || isNaN(amount)) {
+        alert('Пожалуйста, заполните номер заказа и сумму.');
+        return;
+      }
+
+      const newOrder = {
+        id: Date.now(),
+        number,
+        amount,
+        customer: customer || '—',
+        photo: currentPhoto,
+        date: new Date().toISOString()
+      };
+
+      orders.unshift(newOrder);
+      localStorage.setItem('orders', JSON.stringify(orders));
+
+      // Сброс формы
+      currentPhoto = null;
+      photoPreview.innerHTML = '<span>Сделайте фото</span>';
+      orderNumberInput.value = '';
+      amountInput.value = '';
+      customerInput.value = '';
+      saveOrderBtn.disabled = true;
+
+      renderOrders();
+    });
+
+    // Отображение заказов
+    function renderOrders() {
+      if (orders.length === 0) {
+        ordersContainer.innerHTML = '<p style="color:#7f8c8d;">Пока нет заказов</p>';
+        return;
+      }
+
+      ordersContainer.innerHTML = orders.map(order => {
+        const date = new Date(order.date);
+        return `
+          <div class="order-item">
+            <strong>Заказ ${order.number}</strong><br>
+            Клиент: ${order.customer}<br>
+            Сумма: ${order.amount.toLocaleString()} ₽<br>
+            Дата: ${date.toLocaleDateString()}
+            ${order.photo ? `<br><img src="${order.photo}" style="max-width:100%; margin-top:8px; border-radius:6px;">` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
 </body>
 </html>

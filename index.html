@@ -18,7 +18,7 @@
       margin-bottom: 4px;
       font-weight: bold;
     }
-    input, select {
+    input, select, textarea {
       width: 100%;
       padding: 6px;
       box-sizing: border-box;
@@ -59,9 +59,14 @@
 </div>
 
 <div class="form-group">
-  <label>Тип детали</label>
-  <select id="detailType">
-    <option value="">— выберите —</option>
+  <label>Название детали (например: откос, наличник, фрумуга)</label>
+  <input type="text" id="detailName" placeholder="Введите название детали" />
+</div>
+
+<div class="form-group">
+  <label>Тип операции</label>
+  <select id="operationType">
+    <option value="">— выберите тип —</option>
     <option value="(Распил)">Распил</option>
     <option value="(Лин. распил)">Лин. распил</option>
     <option value="(Время)">Время</option>
@@ -100,8 +105,7 @@
 <div id="ordersList"></div>
 
 <script>
-  // Показ/скрытие полей в зависимости от типа
-  document.getElementById('detailType').addEventListener('change', function() {
+  document.getElementById('operationType').addEventListener('change', function() {
     const val = this.value;
     const sizeGroup = document.getElementById('sizeGroup');
     const timeGroup = document.getElementById('timeGroup');
@@ -118,13 +122,15 @@
 
   function addOrder() {
     const num = document.getElementById('orderNumber').value.trim();
-    const type = document.getElementById('detailType').value;
-    if (!num || !type) {
-      alert('Укажите номер заказа и тип детали');
+    const name = document.getElementById('detailName').value.trim();
+    const type = document.getElementById('operationType').value;
+
+    if (!num || !name || !type) {
+      alert('Заполните номер заказа, название детали и тип операции');
       return;
     }
 
-    let orderData = { number: num, type: type };
+    let orderData = { number: num, detailName: name, operationType: type };
 
     if (type === '(Время)') {
       const minutes = parseFloat(document.getElementById('minutes').value);
@@ -132,8 +138,7 @@
         alert('Укажите корректное время (в минутах)');
         return;
       }
-      // Тариф: 5 ₽ за минуту — измените при необходимости
-      const sum = (minutes * 5).toFixed(2);
+      const sum = (minutes * 5).toFixed(2); // 5 ₽/мин — измените при желании
       orderData.minutes = minutes;
       orderData.sum = parseFloat(sum);
     } else {
@@ -144,8 +149,7 @@
         alert('Проверьте длину, ширину и количество');
         return;
       }
-      // Тариф: 65 ₽ за м²
-      const sum = (len * wid * qty * 65).toFixed(2);
+      const sum = (len * wid * qty * 65).toFixed(2); // 65 ₽/м²
       orderData.length = len;
       orderData.width = wid;
       orderData.quantity = qty;
@@ -159,12 +163,12 @@
 
   function clearForm() {
     document.getElementById('orderNumber').value = '';
-    document.getElementById('detailType').selectedIndex = 0;
+    document.getElementById('detailName').value = '';
+    document.getElementById('operationType').selectedIndex = 0;
     document.getElementById('length').value = '';
     document.getElementById('width').value = '';
     document.getElementById('quantity').value = '1';
     document.getElementById('minutes').value = '60';
-    // Сбросим видимость
     document.getElementById('sizeGroup').style.display = 'block';
     document.getElementById('timeGroup').style.display = 'none';
   }
@@ -177,17 +181,17 @@
       const div = document.createElement('div');
       div.className = 'order';
 
-      if (order.type === '(Время)') {
+      if (order.operationType === '(Время)') {
         div.innerHTML = `
           №${idx + 1}. ${order.number}<br>
-          &nbsp;&nbsp;деталь ${order.type}<br>
+          &nbsp;&nbsp;${order.detailName} ${order.operationType}<br>
           &nbsp;&nbsp;Время: ${order.minutes} мин<br>
           &nbsp;&nbsp;Сумма: ${order.sum} ₽<br>
         `;
       } else {
         div.innerHTML = `
           №${idx + 1}. ${order.number}<br>
-          &nbsp;&nbsp;деталь ${order.type}<br>
+          &nbsp;&nbsp;${order.detailName} ${order.operationType}<br>
           &nbsp;&nbsp;Длина: ${order.length} м<br>
           &nbsp;&nbsp;Ширина: ${order.width} м<br>
           &nbsp;&nbsp;Кол-во: ${order.quantity}<br>
@@ -208,13 +212,13 @@
   function editOrder(index) {
     const o = orders[index];
     document.getElementById('orderNumber').value = o.number;
-    document.getElementById('detailType').value = o.type;
+    document.getElementById('detailName').value = o.detailName;
+    document.getElementById('operationType').value = o.operationType;
 
-    // Эмулируем выбор для показа нужных полей
-    const detailSelect = document.getElementById('detailType');
-    detailSelect.dispatchEvent(new Event('change'));
+    // Обновляем видимость полей
+    document.getElementById('operationType').dispatchEvent(new Event('change'));
 
-    if (o.type === '(Время)') {
+    if (o.operationType === '(Время)') {
       document.getElementById('minutes').value = o.minutes;
     } else {
       document.getElementById('length').value = o.length;
@@ -242,8 +246,8 @@
     let txt = 'ЗАКАЗЫ ЗА \n========================\n\n';
     orders.forEach((o, i) => {
       txt += `№${i + 1}. ${o.number}\n`;
-      txt += `   деталь ${o.type}\n`;
-      if (o.type === '(Время)') {
+      txt += `   ${o.detailName} ${o.operationType}\n`;
+      if (o.operationType === '(Время)') {
         txt += `   Время: ${o.minutes} мин\n`;
       } else {
         txt += `   Длина: ${o.length} м\n`;

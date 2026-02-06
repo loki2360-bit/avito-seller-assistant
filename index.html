@@ -572,7 +572,7 @@
           <option value="TIME">Время — 330 ₽/ч</option>
         </select>
       </div>
-      <div class="modal-row">
+      <div class "modal-row">
         <label>Кол-во</label>
         <input type="number" id="editQty" min="1" style="width:100%;padding:10px;border:1px solid #eaeaea;border-radius:8px;">
       </div>
@@ -591,6 +591,21 @@
       <div class="modal-buttons">
         <button class="btn-outline" onclick="closeEditModal()">Отмена</button>
         <button class="btn-blue" onclick="saveEditedOrder()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for date selection -->
+  <div id="dateModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-title">Выберите дату для заказа</div>
+      <div class="modal-row">
+        <label>Дата</label>
+        <input type="date" id="modalDate" class="form-control" style="width:100%;padding:10px;border:1px solid #eaeaea;border-radius:8px;">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-outline" onclick="closeDateModal()">Отмена</button>
+        <button class="btn-blue" onclick="confirmDateSelection()">Подтвердить</button>
       </div>
     </div>
   </div>
@@ -954,7 +969,10 @@
   // === Модальное окно для выбора даты ===
   function openDateModal(preorderId) {
     pendingPreorderId = preorderId;
-    document.getElementById('modalDate').value = todayYMD();
+    const modalDateInput = document.getElementById('modalDate');
+    if (modalDateInput) {
+      modalDateInput.value = todayYMD();
+    }
     document.getElementById('dateModal').classList.add('active');
   }
 
@@ -964,7 +982,9 @@
   }
 
   function confirmDateSelection() {
-    const selectedDate = document.getElementById('modalDate').value;
+    const modalDateInput = document.getElementById('modalDate');
+    const selectedDate = modalDateInput ? modalDateInput.value : null;
+    
     if (!selectedDate) {
       alert('Выберите дату');
       return;

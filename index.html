@@ -45,6 +45,8 @@
     .actions {
       margin-top: 8px;
     }
+    #timeGroup { display: none; }
+    #sizeGroup { display: block; }
   </style>
 </head>
 <body>
@@ -58,7 +60,9 @@
 
 <div class="form-group">
   <label>Тип детали</label>
-  <select id="detailType" multiple size="6">
+  <select id="detailType">
+    <option value="">— выберите —</option>
+    <option value="(Распил)">Распил</option>
     <option value="(Лин. распил)">Лин. распил</option>
     <option value="(Время)">Время</option>
     <option value="(Пазы)">Пазы</option>
@@ -68,19 +72,26 @@
   </select>
 </div>
 
-<div class="form-group">
-  <label>Длина (м)</label>
-  <input type="number" step="0.01" id="length" placeholder="2.8" />
+<div id="sizeGroup">
+  <div class="form-group">
+    <label>Длина (м)</label>
+    <input type="number" step="0.01" id="length" placeholder="2.8" />
+  </div>
+  <div class="form-group">
+    <label>Ширина (м)</label>
+    <input type="number" step="0.01" id="width" placeholder="0.23" />
+  </div>
+  <div class="form-group">
+    <label>Количество</label>
+    <input type="number" id="quantity" value="1" min="1" />
+  </div>
 </div>
 
-<div class="form-group">
-  <label>Ширина (м)</label>
-  <input type="number" step="0.01" id="width" placeholder="0.23" />
-</div>
-
-<div class="form-group">
-  <label>Количество</label>
-  <input type="number" id="quantity" value="1" min="1" />
+<div id="timeGroup">
+  <div class="form-group">
+    <label>Время (минут)</label>
+    <input type="number" id="minutes" value="60" min="1" />
+  </div>
 </div>
 
 <button onclick="addOrder()">Добавить заказ</button>
@@ -89,43 +100,73 @@
 <div id="ordersList"></div>
 
 <script>
+  // Показ/скрытие полей в зависимости от типа
+  document.getElementById('detailType').addEventListener('change', function() {
+    const val = this.value;
+    const sizeGroup = document.getElementById('sizeGroup');
+    const timeGroup = document.getElementById('timeGroup');
+    if (val === '(Время)') {
+      sizeGroup.style.display = 'none';
+      timeGroup.style.display = 'block';
+    } else {
+      sizeGroup.style.display = 'block';
+      timeGroup.style.display = 'none';
+    }
+  });
+
   let orders = [];
 
   function addOrder() {
     const num = document.getElementById('orderNumber').value.trim();
-    const types = Array.from(document.getElementById('detailType').selectedOptions).map(opt => opt.value);
-    const len = parseFloat(document.getElementById('length').value);
-    const wid = parseFloat(document.getElementById('width').value);
-    const qty = parseInt(document.getElementById('quantity').value);
-
-    if (!num || types.length === 0 || isNaN(len) || isNaN(wid) || isNaN(qty)) {
-      alert('Заполните все поля корректно');
+    const type = document.getElementById('detailType').value;
+    if (!num || !type) {
+      alert('Укажите номер заказа и тип детали');
       return;
     }
 
-    // Пример расчёта суммы: площадь * коэффициент * количество
-    const sum = (len * wid * qty * 65).toFixed(2); // 65 ₽/м² — можно изменить
+    let orderData = { number: num, type: type };
 
-    const order = {
-      number: num,
-      types: types,
-      length: len,
-      width: wid,
-      quantity: qty,
-      sum: parseFloat(sum)
-    };
+    if (type === '(Время)') {
+      const minutes = parseFloat(document.getElementById('minutes').value);
+      if (isNaN(minutes) || minutes <= 0) {
+        alert('Укажите корректное время (в минутах)');
+        return;
+      }
+      // Тариф: 5 ₽ за минуту — измените при необходимости
+      const sum = (minutes * 5).toFixed(2);
+      orderData.minutes = minutes;
+      orderData.sum = parseFloat(sum);
+    } else {
+      const len = parseFloat(document.getElementById('length').value);
+      const wid = parseFloat(document.getElementById('width').value);
+      const qty = parseInt(document.getElementById('quantity').value);
+      if (isNaN(len) || isNaN(wid) || isNaN(qty) || len <= 0 || wid <= 0 || qty <= 0) {
+        alert('Проверьте длину, ширину и количество');
+        return;
+      }
+      // Тариф: 65 ₽ за м²
+      const sum = (len * wid * qty * 65).toFixed(2);
+      orderData.length = len;
+      orderData.width = wid;
+      orderData.quantity = qty;
+      orderData.sum = parseFloat(sum);
+    }
 
-    orders.push(order);
+    orders.push(orderData);
     renderOrders();
     clearForm();
   }
 
   function clearForm() {
     document.getElementById('orderNumber').value = '';
-    document.getElementById('detailType').selectedIndex = -1;
+    document.getElementById('detailType').selectedIndex = 0;
     document.getElementById('length').value = '';
     document.getElementById('width').value = '';
     document.getElementById('quantity').value = '1';
+    document.getElementById('minutes').value = '60';
+    // Сбросим видимость
+    document.getElementById('sizeGroup').style.display = 'block';
+    document.getElementById('timeGroup').style.display = 'none';
   }
 
   function renderOrders() {
@@ -136,14 +177,25 @@
       const div = document.createElement('div');
       div.className = 'order';
 
-      const typesStr = order.types.join(' ');
-      div.innerHTML = `
-        №${idx + 1}. ${order.number}<br>
-        &nbsp;&nbsp;деталь (Распил) ${typesStr}<br>
-        &nbsp;&nbsp;Длина: ${order.length} м<br>
-        &nbsp;&nbsp;Ширина: ${order.width} м<br>
-        &nbsp;&nbsp;Кол-во: ${order.quantity}<br>
-        &nbsp;&nbsp;Сумма: ${order.sum} ₽<br>
+      if (order.type === '(Время)') {
+        div.innerHTML = `
+          №${idx + 1}. ${order.number}<br>
+          &nbsp;&nbsp;деталь ${order.type}<br>
+          &nbsp;&nbsp;Время: ${order.minutes} мин<br>
+          &nbsp;&nbsp;Сумма: ${order.sum} ₽<br>
+        `;
+      } else {
+        div.innerHTML = `
+          №${idx + 1}. ${order.number}<br>
+          &nbsp;&nbsp;деталь ${order.type}<br>
+          &nbsp;&nbsp;Длина: ${order.length} м<br>
+          &nbsp;&nbsp;Ширина: ${order.width} м<br>
+          &nbsp;&nbsp;Кол-во: ${order.quantity}<br>
+          &nbsp;&nbsp;Сумма: ${order.sum} ₽<br>
+        `;
+      }
+
+      div.innerHTML += `
         <div class="actions">
           <button onclick="editOrder(${idx})">Изменить</button>
           <button onclick="deleteOrder(${idx})" style="background:#777;">Удалить</button>
@@ -156,16 +208,20 @@
   function editOrder(index) {
     const o = orders[index];
     document.getElementById('orderNumber').value = o.number;
-    // Сбросить выбор, затем установить нужные
-    const sel = document.getElementById('detailType');
-    for (let i = 0; i < sel.options.length; i++) {
-      sel.options[i].selected = o.types.includes(sel.options[i].value);
-    }
-    document.getElementById('length').value = o.length;
-    document.getElementById('width').value = o.width;
-    document.getElementById('quantity').value = o.quantity;
+    document.getElementById('detailType').value = o.type;
 
-    // Удаляем старую запись после редактирования
+    // Эмулируем выбор для показа нужных полей
+    const detailSelect = document.getElementById('detailType');
+    detailSelect.dispatchEvent(new Event('change'));
+
+    if (o.type === '(Время)') {
+      document.getElementById('minutes').value = o.minutes;
+    } else {
+      document.getElementById('length').value = o.length;
+      document.getElementById('width').value = o.width;
+      document.getElementById('quantity').value = o.quantity;
+    }
+
     orders.splice(index, 1);
     renderOrders();
   }
@@ -186,10 +242,14 @@
     let txt = 'ЗАКАЗЫ ЗА \n========================\n\n';
     orders.forEach((o, i) => {
       txt += `№${i + 1}. ${o.number}\n`;
-      txt += `   деталь (Распил) ${o.types.join(' ')}\n`;
-      txt += `   Длина: ${o.length} м\n`;
-      txt += `   Ширина: ${o.width} м\n`;
-      txt += `   Кол-во: ${o.quantity}\n`;
+      txt += `   деталь ${o.type}\n`;
+      if (o.type === '(Время)') {
+        txt += `   Время: ${o.minutes} мин\n`;
+      } else {
+        txt += `   Длина: ${o.length} м\n`;
+        txt += `   Ширина: ${o.width} м\n`;
+        txt += `   Кол-во: ${o.quantity}\n`;
+      }
       txt += `   Сумма: ${o.sum} ₽\n`;
       txt += '---\n';
     });

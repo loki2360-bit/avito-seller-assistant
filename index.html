@@ -198,7 +198,9 @@
 
     function findClientById(input) {
       input = input.trim();
-      if (clients[input]) return { id: input, data: clients[input] };
+      if (clients[input]) {
+        return { id: input, data: clients[input] };
+      }
       return null;
     }
 
@@ -248,7 +250,8 @@
         return alert("Сначала добавьте покупку или укажите корректный ID");
       }
 
-      const { id,  client } = result;
+      const { id, data: client } = result;
+
       const displayId = client.isPhone ? `••••${id}` : `PIN: ${id}`;
 
       const historyLines = client.history

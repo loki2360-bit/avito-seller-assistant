@@ -13,7 +13,7 @@
     }
     .container { max-width: 600px; margin: 0 auto; }
     h2 { margin: 20px 0 12px; }
-    input, button, select {
+    input, button {
       width: 100%;
       padding: 12px;
       margin: 8px 0;
@@ -28,15 +28,13 @@
       cursor: pointer;
     }
     button:hover { opacity: 0.9; }
-    .settings-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+    .settings-row {
+      display: flex;
       gap: 8px;
+      margin-bottom: 8px;
     }
-    .settings-grid input, .settings-grid label {
-      width: 100%;
-      margin: 0;
-      font-size: 14px;
+    .settings-row input {
+      width: calc(50% - 4px);
     }
     button.export-btn { background: #9c27b0; font-size: 14px; padding: 8px; }
     button.send-btn { background: #0088cc; }
@@ -57,9 +55,7 @@
       from { opacity: 0; transform: translateY(-10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .level-5 { background: #e3f2fd; color: #0d47a1; }
-    .level-20 { background: #fff8e1; color: #e65100; }
-    .level-30 { background: #e8f5e8; color: #1b5e20; }
+    .level-custom { background: #e8f5e8; color: #1b5e20; }
     .pin-display {
       text-align: center;
       font-size: 24px;
@@ -91,25 +87,25 @@
 
     <!-- НАСТРОЙКИ -->
     <div class="section no-print">
-      <h2>⚙️ Настройки</h2>
+      <h2>⚙️ Настройки программы</h2>
+      
       <p>Баллы за операцию:</p>
-      <input type="number" id="points-per-op" min="1" max="100" value="5" />
+      <input type="number" id="points-per-op" min="1" max="100" placeholder="Например: 5" />
 
-      <p>Уровни скидок:</p>
-      <div class="settings-grid">
-        <div>
-          <label>15 баллов →</label>
-          <input type="number" id="disc1" min="0" max="100" value="5" placeholder="%"/>%
-        </div>
-        <div>
-          <label>25 баллов →</label>
-          <input type="number" id="disc2" min="0" max="100" value="20" placeholder="%"/>%
-        </div>
-        <div>
-          <label>30 баллов →</label>
-          <input type="number" id="disc3" min="0" max="100" value="30" placeholder="%"/>%
-        </div>
+      <p>Уровни лояльности (порог → скидка):</p>
+      <div class="settings-row">
+        <input type="number" id="thr1" min="1" placeholder="Баллы" value="15" />
+        <input type="number" id="disc1" min="0" max="100" placeholder="Скидка %" value="5" />
       </div>
+      <div class="settings-row">
+        <input type="number" id="thr2" min="1" placeholder="Баллы" value="25" />
+        <input type="number" id="disc2" min="0" max="100" placeholder="Скидка %" value="20" />
+      </div>
+      <div class="settings-row">
+        <input type="number" id="thr3" min="1" placeholder="Баллы" value="30" />
+        <input type="number" id="disc3" min="0" max="100" placeholder="Скидка %" value="30" />
+      </div>
+
       <button class="settings-btn" onclick="saveSettings()">💾 Сохранить настройки</button>
     </div>
 
@@ -177,24 +173,31 @@
     let currentContactLink = null;
     let currentPin = null;
 
-    // Применить настройки к UI при загрузке
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('points-per-op').value = settings.pointsPerOp;
+      document.getElementById('thr1').value = settings.levels[0].threshold;
       document.getElementById('disc1').value = settings.levels[0].discount;
+      document.getElementById('thr2').value = settings.levels[1].threshold;
       document.getElementById('disc2').value = settings.levels[1].discount;
+      document.getElementById('thr3').value = settings.levels[2].threshold;
       document.getElementById('disc3').value = settings.levels[2].discount;
     });
 
     function saveSettings() {
-      settings.pointsPerOp = parseInt(document.getElementById('points-per-op').value) || 5;
-      settings.levels[0].discount = parseInt(document.getElementById('disc1').value) || 5;
-      settings.levels[1].discount = parseInt(document.getElementById('disc2').value) || 20;
-      settings.levels[2].discount = parseInt(document.getElementById('disc3').value) || 30;
+      const ppo = parseInt(document.getElementById('points-per-op').value) || 5;
+      const levels = [
+        { threshold: parseInt(document.getElementById('thr1').value) || 15, discount: parseInt(document.getElementById('disc1').value) || 5 },
+        { threshold: parseInt(document.getElementById('thr2').value) || 25, discount: parseInt(document.getElementById('disc2').value) || 20 },
+        { threshold: parseInt(document.getElementById('thr3').value) || 30, discount: parseInt(document.getElementById('disc3').value) || 30 }
+      ];
+      // Сортируем по возрастанию порога
+      levels.sort((a, b) => a.threshold - b.threshold);
+      settings = { pointsPerOp: ppo, levels };
       localStorage.setItem('loyalty_settings', JSON.stringify(settings));
       alert("✅ Настройки сохранены!");
     }
 
-    // === ОСТАЛЬНЫЕ ФУНКЦИИ (без изменений, кроме использования settings) ===
+    // === ОСТАЛЬНЫЕ ФУНКЦИИ (без изменений) ===
     function generateUniquePin() {
       let pin;
       do {
@@ -353,16 +356,18 @@
       const addPoints = settings.pointsPerOp;
       let newPoints = entry.newPoints + addPoints;
 
-      // Проверка уровней (снизу вверх!)
+      // Проверяем уровни от самого высокого к низкому
       let promoLevel = null, discount = 0, reset = false;
-      if (newPoints >= settings.levels[2].threshold) { // 30
-        promoLevel = '30'; discount = settings.levels[2].discount;
-        reset = true;
-        newPoints = 0;
-      } else if (newPoints >= settings.levels[1].threshold) { // 25
-        promoLevel = '20'; discount = settings.levels[1].discount;
-      } else if (newPoints >= settings.levels[0].threshold) { // 15
-        promoLevel = '5'; discount = settings.levels[0].discount;
+      for (let i = settings.levels.length - 1; i >= 0; i--) {
+        if (newPoints >= settings.levels[i].threshold) {
+          promoLevel = 'custom';
+          discount = settings.levels[i].discount;
+          if (i === settings.levels.length - 1) { // последний уровень → сброс
+            reset = true;
+            newPoints = 0;
+          }
+          break;
+        }
       }
 
       addToHistory(entry.id, entry.newPoints, newPoints, entry.contact, entry.pin);

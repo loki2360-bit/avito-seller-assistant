@@ -3,257 +3,262 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Лояльность</title>
+  <title>Админка лояльности</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
     body {
       padding: 20px;
-      background: #f9f9f9;
-      color: #333;
+      background: #f5f7fa;
+      color: #222;
     }
     .container { max-width: 600px; margin: 0 auto; }
-    h2 { margin: 16px 0; }
+    h2 { margin: 20px 0 12px; }
     input, button {
       width: 100%;
       padding: 12px;
       margin: 8px 0;
-      border: 1px solid #ccc;
+      border: 1px solid #ddd;
       border-radius: 8px;
       font-size: 16px;
     }
     button {
-      background: #4A90E2;
+      background: #2196F3;
       color: white;
       border: none;
       cursor: pointer;
-      transition: opacity 0.2s;
     }
     button:hover { opacity: 0.9; }
-    button.small {
+    button.copy-btn {
+      background: #4CAF50;
       width: auto;
       padding: 6px 12px;
       font-size: 14px;
-      display: inline-block;
       margin-left: 8px;
     }
-    #qr-code img { display: block; margin: 16px auto; max-width: 200px; }
-    .hidden { display: none !important; }
-    .promo { 
-      background: #fff8e1; 
-      padding: 12px; 
-      border-radius: 8px; 
-      margin-top: 12px;
-      font-weight: bold;
-      color: #e65100;
+    #qr-display img {
+      display: block;
+      margin: 20px auto;
+      max-width: 250px;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      background: white;
+      padding: 8px;
     }
-    .admin-section { background: #f0f7ff; padding: 16px; border-radius: 8px; margin-top: 20px; }
+    .section { background: white; padding: 16px; border-radius: 12px; margin-top: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .hidden { display: none !important; }
+    .info { background: #e3f2fd; padding: 12px; border-radius: 8px; margin: 12px 0; }
+    .error { background: #ffebee; color: #c62828; padding: 10px; border-radius: 6px; margin: 10px 0; }
+    .success { background: #e8f5e9; color: #2e7d32; padding: 10px; border-radius: 6px; margin: 10px 0; }
+    .history-item { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- КЛИЕНТСКИЙ ВИДЖЕТ -->
-    <div id="client-view">
-      <h2>📱 Ваш телефон</h2>
-      <input id="phone" type="tel" placeholder="+7 (999) 123-45-67" />
-      <button onclick="showQR()">Получить QR-код</button>
-      <div id="qr-code"></div>
-      <div id="promo-hint" class="promo hidden"></div>
+    <h1>🎟️ Система лояльности</h1>
+
+    <!-- ГЕНЕРАЦИЯ НОВОГО КЛИЕНТА -->
+    <div class="section">
+      <h2>➕ Выдать новый QR</h2>
+      <button onclick="generateNewUser()">Создать QR для нового клиента</button>
+      <div id="new-qr-display" class="hidden">
+        <h3>Новый QR:</h3>
+        <div id="new-qr-img"></div>
+        <p><strong>Строка для копирования:</strong></p>
+        <input id="new-qr-text" readonly />
+        <button class="copy-btn" onclick="copyToClipboard('new-qr-text')">Копировать</button>
+        <p><em>Отправьте клиенту картинку или строку.</em></p>
+      </div>
     </div>
 
-    <!-- ПЕРЕКЛЮЧАТЕЛЬ -->
-    <button onclick="toggleMode()" style="background:#666;">Админка / Клиент</button>
+    <!-- ОБРАБОТКА СУЩЕСТВУЮЩЕГО QR -->
+    <div class="section">
+      <h2>🔄 Обновить баллы по QR</h2>
+      <p>Вставьте всю строку из QR-кода (или введите ID и баллы):</p>
+      
+      <input type="text" id="input-qr-full" placeholder="id:abc|points:100|hash:XYZ..." />
+      <div id="qr-error" class="error hidden"></div>
+      <div id="qr-valid" class="success hidden">✅ QR подтверждён</div>
 
-    <!-- АДМИНКА -->
-    <div id="admin-panel" class="hidden">
-      <h2>🔐 Админка</h2>
-      <input id="admin-pin" type="password" placeholder="PIN (по умолчанию: 1234)" />
-      <button onclick="unlockAdmin()">Войти</button>
+      <h3>Изменение баллов</h3>
+      <input type="number" id="change-points" placeholder="± баллы (например: 50 или -30)" />
+      
+      <button onclick="processUpdate()">Обновить и сгенерировать новый QR</button>
 
-      <div id="admin-content" class="hidden admin-section">
-        <h3>🔍 Найти пользователя</h3>
-        <p>Введите ID из QR-кода (часть после LOYALTY:)</p>
-        <input id="manual-id" placeholder="abc123..." />
-        <button onclick="loadUserById()">Найти</button>
-
-        <div id="user-info" class="hidden">
-          <h3>👤 Пользователь</h3>
-          <p><strong>Телефон:</strong> <span id="user-phone"></span></p>
-          <p><strong>Баллы:</strong> <span id="user-points">0</span></p>
-          <div id="current-promo" class="promo hidden"></div>
-
-          <h4>± Баллы</h4>
-          <input id="points-change" type="number" placeholder="Например: 100 или -50" />
-          <button onclick="applyPoints()">Применить</button>
-
-          <h4 style="margin-top:20px;">📤 Экспорт</h4>
-          <button onclick="exportData('txt')">Скачать TXT</button>
-          <button onclick="exportData('json')">Скачать JSON</button>
-        </div>
+      <div id="result-qr-display" class="hidden">
+        <h3>Обновлённый QR:</h3>
+        <div id="result-qr-img"></div>
+        <p><strong>Строка:</strong></p>
+        <input id="result-qr-text" readonly />
+        <button class="copy-btn" onclick="copyToClipboard('result-qr-text')">Копировать</button>
+        <p class="info">✅ Отправьте этот QR клиенту.</p>
       </div>
+    </div>
+
+    <!-- ИСТОРИЯ И ЭКСПОРТ -->
+    <div class="section">
+      <h2>💾 История операций</h2>
+      <button onclick="exportHistory('txt')">Экспорт в TXT</button>
+      <button onclick="exportHistory('json')">Экспорт в JSON</button>
+      <div id="history-list" style="margin-top:12px; max-height:200px; overflow:auto;"></div>
+    </div>
+
+    <!-- ИНСТРУКЦИЯ -->
+    <div class="section" style="margin-top: 30px; font-size: 14px; color: #666;">
+      <h3>ℹ️ Как использовать</h3>
+      <ul>
+        <li>Новый клиент → «Создать QR» → получите QR с 100 баллами.</li>
+        <li>Клиент показывает QR → вы вставляете ВСЮ строку в поле выше.</li>
+        <li>Система проверит подлинность → введите изменение баллов.</li>
+        <li>Получите новый QR → отправьте клиенту.</li>
+      </ul>
     </div>
   </div>
 
   <!-- QR Generator -->
   <script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
   <script>
-    // === КОНФИГУРАЦИЯ ===
-    const ADMIN_PIN = "1234"; // ← ЗАМЕНИТЕ НА СВОЙ!
-    let users = JSON.parse(localStorage.getItem('loyalty_users') || '{}');
+    // === СЕКРЕТ ДЛЯ ПОДПИСИ ===
+    const SECRET = "loyalty-secret-2026"; // ← ОБЯЗАТЕЛЬНО ЗАМЕНИТЕ!
 
-    // === КЛИЕНТ: ГЕНЕРАЦИЯ QR ===
-    function showQR() {
-      const phone = document.getElementById('phone').value.trim().replace(/\D/g, '');
-      if (!phone || phone.length < 10) return alert("Введите корректный телефон");
-      const cleanPhone = '+' + phone;
+    // История операций
+    let history = JSON.parse(localStorage.getItem('loyalty_history') || '[]');
 
-      if (!users[cleanPhone]) {
-        users[cleanPhone] = {
-          points: 0,
-          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-          promo500: null, // {code, expires}
-          promo1000: null  // {code, expires} — бессрочный
-        };
-        saveUsers();
-      }
+    // Хэш
+    function makeHash(id, points) {
+      const str = `${id}|${points}|${SECRET}`;
+      return btoa(str).replace(/[^a-zA-Z0-9]/g, '').substring(0, 12).toUpperCase();
+    }
 
-      const userId = users[cleanPhone].id;
-      const qrData = `LOYALTY:${userId}`;
+    function verifyData(id, points, hash) {
+      return makeHash(id, points) === hash;
+    }
+
+    function encodeToQRString(id, points) {
+      const hash = makeHash(id, points);
+      return `id:${id}|points:${points}|hash:${hash}`;
+    }
+
+    function parseQRString(str) {
+      const parts = str.split('|');
+      const data = {};
+      parts.forEach(part => {
+        const [key, val] = part.split(':');
+        if (key && val) data[key] = key === 'points' ? parseInt(val) : val;
+      });
+      return data;
+    }
+
+    function generateQRImage(dataStr) {
       const qr = qrcode(0, 'M');
-      qr.addData(qrData);
+      qr.addData(dataStr);
       qr.make();
-      document.getElementById('qr-code').innerHTML = qr.createImgTag(5);
-
-      // Показать подсказку о промокодах
-      checkAndShowPromoHint(cleanPhone);
+      return qr.createImgTag(6);
     }
 
-    function checkAndShowPromoHint(phone) {
-      const el = document.getElementById('promo-hint');
-      el.classList.add('hidden');
-      const u = users[phone];
-      if (u.promo1000) {
-        el.innerText = `🎁 У вас есть промокод на 30%: ${u.promo1000.code}`;
-        el.classList.remove('hidden');
-      } else if (u.promo500 && new Date(u.promo500.expires) > new Date()) {
-        el.innerText = `🎁 Промокод на 5%: ${u.promo500.code} (действует до ${new Date(u.promo500.expires).toLocaleDateString()})`;
-        el.classList.remove('hidden');
-      }
+    function addToHistory(action, id, oldPoints, newPoints) {
+      const entry = {
+        time: new Date().toISOString(),
+        action,
+        id,
+        oldPoints,
+        newPoints
+      };
+      history.unshift(entry);
+      if (history.length > 200) history = history.slice(0, 200); // ограничение
+      localStorage.setItem('loyalty_history', JSON.stringify(history));
+      renderHistory();
     }
 
-    // === АДМИНКА ===
-    function toggleMode() {
-      const client = document.getElementById('client-view');
-      const admin = document.getElementById('admin-panel');
-      if (client.classList.contains('hidden')) {
-        client.classList.remove('hidden');
-        admin.classList.add('hidden');
-      } else {
-        client.classList.add('hidden');
-        admin.classList.remove('hidden');
-      }
+    function renderHistory() {
+      const list = document.getElementById('history-list');
+      list.innerHTML = history.map(item => `
+        <div class="history-item">
+          ${new Date(item.time).toLocaleString()} — ${item.action} 
+          ID: ${item.id} (${item.oldPoints} → ${item.newPoints})
+        </div>
+      `).join('');
     }
 
-    function unlockAdmin() {
-      const pin = document.getElementById('admin-pin').value;
-      if (pin === ADMIN_PIN) {
-        document.getElementById('admin-content').classList.remove('hidden');
-      } else {
-        alert("Неверный PIN");
-      }
+    // === КОПИРОВАНИЕ ===
+    function copyToClipboard(id) {
+      const el = document.getElementById(id);
+      el.select();
+      document.execCommand('copy');
+      alert("Скопировано!");
     }
 
-    function loadUserById() {
-      const id = document.getElementById('manual-id').value.trim();
-      if (!id) return alert("Введите ID");
-      
-      let found = null;
-      for (let phone in users) {
-        if (users[phone].id === id) {
-          found = { phone, ...users[phone] };
-          break;
-        }
-      }
+    // === НОВЫЙ КЛИЕНТ ===
+    function generateNewUser() {
+      const id = Math.random().toString(36).substring(2, 10) + Date.now().toString(36).slice(-4);
+      const points = 100;
+      const qrStr = encodeToQRString(id, points);
+      const imgTag = generateQRImage(qrStr);
 
-      if (!found) {
-        alert("Пользователь не найден");
-        document.getElementById('user-info').classList.add('hidden');
+      document.getElementById('new-qr-img').innerHTML = imgTag;
+      document.getElementById('new-qr-text').value = qrStr;
+      document.getElementById('new-qr-display').classList.remove('hidden');
+
+      addToHistory("Новый клиент", id, 0, points);
+    }
+
+    // === ОБНОВЛЕНИЕ ===
+    function processUpdate() {
+      const fullStr = document.getElementById('input-qr-full').value.trim();
+      if (!fullStr) {
+        alert("Вставьте строку из QR-кода");
         return;
       }
 
-      document.getElementById('user-phone').innerText = found.phone;
-      document.getElementById('user-points').innerText = found.points;
-      document.getElementById('user-info').classList.remove('hidden');
-
-      // Показ текущего промокода
-      const promoEl = document.getElementById('current-promo');
-      promoEl.classList.add('hidden');
-      if (found.promo1000) {
-        promoEl.innerText = `30% промокод: ${found.promo1000.code} (бессрочный)`;
-        promoEl.classList.remove('hidden');
-      } else if (found.promo500 && new Date(found.promo500.expires) > new Date()) {
-        promoEl.innerText = `5% промокод: ${found.promo500.code} (до ${new Date(found.promo500.expires).toLocaleDateString()})`;
-        promoEl.classList.remove('hidden');
-      }
-    }
-
-    function applyPoints() {
-      const phone = document.getElementById('user-phone').innerText;
-      const change = parseInt(document.getElementById('points-change').value);
-      if (isNaN(change)) return alert("Введите число");
-
-      users[phone].points += change;
-      if (users[phone].points < 0) users[phone].points = 0;
-
-      // Генерация промокодов
-      checkPromoConditions(phone);
-
-      saveUsers();
-      document.getElementById('user-points').innerText = users[phone].points;
-      alert(`Баллы обновлены! Текущий баланс: ${users[phone].points}`);
-      loadUserById(); // обновить отображение
-    }
-
-    function checkPromoConditions(phone) {
-      const u = users[phone];
-      const now = new Date();
-
-      // 500 → 5% на 2 дня
-      if (u.points >= 500 && !u.promo500) {
-        const code = "LOYAL5-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-        const expires = new Date(now);
-        expires.setDate(expires.getDate() + 2);
-        u.promo500 = { code, expires: expires.toISOString() };
+      const data = parseQRString(fullStr);
+      if (!data.id || isNaN(data.points) || !data.hash) {
+        document.getElementById('qr-error').innerText = "❌ Неверный формат QR";
+        document.getElementById('qr-error').classList.remove('hidden');
+        document.getElementById('qr-valid').classList.add('hidden');
+        return;
       }
 
-      // 1000 → 30% навсегда
-      if (u.points >= 1000 && !u.promo1000) {
-        const code = "LOYAL30-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-        u.promo1000 = { code, expires: null };
+      if (!verifyData(data.id, data.points, data.hash)) {
+        document.getElementById('qr-error').innerText = "❌ Поддельный QR! Хэш не совпадает.";
+        document.getElementById('qr-error').classList.remove('hidden');
+        document.getElementById('qr-valid').classList.add('hidden');
+        return;
       }
+
+      document.getElementById('qr-error').classList.add('hidden');
+      document.getElementById('qr-valid').classList.remove('hidden');
+
+      const change = parseInt(document.getElementById('change-points').value);
+      if (isNaN(change)) {
+        alert("Введите изменение баллов");
+        return;
+      }
+
+      let newPoints = data.points + change;
+      if (newPoints < 0) newPoints = 0;
+
+      const newQrStr = encodeToQRString(data.id, newPoints);
+      const imgTag = generateQRImage(newQrStr);
+
+      document.getElementById('result-qr-img').innerHTML = imgTag;
+      document.getElementById('result-qr-text').value = newQrStr;
+      document.getElementById('result-qr-display').classList.remove('hidden');
+
+      addToHistory("Обновление", data.id, data.points, newPoints);
     }
 
-    function saveUsers() {
-      localStorage.setItem('loyalty_users', JSON.stringify(users));
-    }
-
-    // === ЭКСПОРТ ===
-    function exportData(format) {
+    // === ЭКСПОРТ ИСТОРИИ ===
+    function exportHistory(format) {
       let dataStr, filename;
       if (format === 'txt') {
-        let txt = "";
-        for (let phone in users) {
-          const u = users[phone];
-          txt += `Телефон: ${phone}\n`;
-          txt += `Баллы: ${u.points}\n`;
-          if (u.promo500) txt += `Промо 5%: ${u.promo500.code} (до ${new Date(u.promo500.expires).toLocaleDateString()})\n`;
-          if (u.promo1000) txt += `Промо 30%: ${u.promo1000.code} (бессрочный)\n`;
-          txt += "---\n";
-        }
-        dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(txt);
-        filename = `loyalty_${new Date().toISOString().slice(0,10)}.txt`;
+        let txt = "История операций лояльности\n===========================\n\n";
+        history.forEach(item => {
+          txt += `${new Date(item.time).toLocaleString()} | ${item.action} | ID: ${item.id} | ${item.oldPoints} → ${item.newPoints}\n`;
+        });
+        dataStr = "text/plain;charset=utf-8," + encodeURIComponent(txt);
+        filename = `loyalty_history_${new Date().toISOString().slice(0,10)}.txt`;
       } else {
-        dataStr = "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(users, null, 2));
-        filename = `loyalty_${new Date().toISOString().slice(0,10)}.json`;
+        dataStr = "application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(history, null, 2));
+        filename = `loyalty_history_${new Date().toISOString().slice(0,10)}.json`;
       }
 
       const link = document.createElement("a");
@@ -264,9 +269,9 @@
       document.body.removeChild(link);
     }
 
-    // Инициализация
+    // === ИНИЦИАЛИЗАЦИЯ ===
     window.onload = () => {
-      document.getElementById('admin-panel').classList.add('hidden');
+      renderHistory();
     };
   </script>
 </body>

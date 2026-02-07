@@ -1,28 +1,20 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>БОНУС+ПРОМО</title>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Программа лояльности</title>
     <style>
         :root {
-            --bg-color: #f0f2f5;
-            --card-color: #ffffff;
-            --text-primary: #2d3748;
-            --text-secondary: #718096;
-            --border-color: #e2e8f0;
-            --shadow-light: 8px 8px 16px rgba(160, 174, 192, 0.3);
-            --shadow-dark: -8px -8px 16px rgba(255, 255, 255, 0.8);
-            --inset-shadow: inset 4px 4px 8px rgba(160, 174, 192, 0.3), inset -4px -4px 8px rgba(255, 255, 255, 0.8);
-            --primary-accent: #4a5568;
-            --success-color: #38a169;
-            --error-color: #e53e3e;
-            --warning-color: #dd6b20;
-            --info-color: #3182ce;
-            --border-radius: 20px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --primary-yellow: #FFD700;
+            --primary-black: #1a1a1a;
+            --primary-gray: #f5f5f5;
+            --primary-red: #e74c3c;
+            --primary-green: #2ecc71;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --glow: 0 0 15px rgba(255, 215, 0, 0.5);
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
         }
 
         * {
@@ -33,1301 +25,414 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg-color);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
-            color: var(--text-primary);
-            line-height: 1.6;
+            color: var(--primary-black);
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 800px;
             margin: 0 auto;
-        }
-
-        header {
             text-align: center;
-            margin-bottom: 30px;
-            position: relative;
         }
 
         .logo {
-            font-size: 2.8em;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary-accent), #718096);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -1px;
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--primary-yellow);
+            text-shadow: var(--glow);
             margin-bottom: 10px;
-            font-family: Arial, sans-serif;
         }
 
         .subtitle {
-            font-size: 1.1em;
-            color: var(--text-secondary);
-            margin-top: 10px;
-            font-weight: 500;
+            font-size: 1.2em;
+            color: white;
+            margin-bottom: 30px;
         }
 
-        .tabs {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 25px;
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            padding: 12px 24px;
-            background: var(--card-color);
-            border: none;
+        .scan-section {
+            background: white;
             border-radius: var(--border-radius);
-            color: var(--text-secondary);
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-            font-size: 0.95em;
-            min-width: 120px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
         }
 
-        .tab-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 12px 12px 24px rgba(160, 174, 192, 0.25), -12px -12px 24px rgba(255, 255, 255, 0.8);
+        #cameraContainer {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 20px;
+            position: relative;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background: #eee;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
         }
 
-        .tab-btn.active {
-            color: var(--primary-accent);
-            background: var(--card-color);
-            box-shadow: var(--inset-shadow);
-        }
-
-        .admin-tab {
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             display: none;
         }
 
-        .admin-access {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: var(--card-color);
-            border: none;
-            border-radius: 50px;
-            color: var(--text-secondary);
-            padding: 8px 20px;
-            cursor: pointer;
-            transition: var(--transition);
-            font-size: 0.85em;
-            font-weight: 600;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
         }
 
-        .admin-access:hover {
-            transform: translateY(-2px);
-            box-shadow: 8px 8px 16px rgba(160, 174, 192, 0.25), -8px -8px 16px rgba(255, 255, 255, 0.8);
-            color: var(--primary-accent);
-        }
-
-        .main-content {
-            background: var(--card-color);
-            border-radius: var(--border-radius);
-            padding: 32px;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-            transition: var(--transition);
-        }
-
-        .section-title {
-            color: var(--text-primary);
-            margin-bottom: 28px;
-            font-size: 1.8em;
-            text-align: center;
-            font-weight: 700;
-            position: relative;
-        }
-
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(135deg, var(--primary-accent), #718096);
-            border-radius: 2px;
-        }
-
-        /* Страница регистрации */
-        .registration-form {
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        .form-group {
-            margin-bottom: 24px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 0.95em;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 16px 20px;
-            background: var(--card-color);
-            border: 2px solid var(--border-color);
+        #qrInput {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--primary-gray);
             border-radius: var(--border-radius);
             font-size: 1em;
             transition: var(--transition);
-            color: var(--text-primary);
-            box-shadow: var(--inset-shadow);
         }
 
-        .form-group input:focus {
+        #qrInput:focus {
             outline: none;
-            border-color: var(--primary-accent);
-            box-shadow: inset 4px 4px 8px rgba(160, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+            border-color: var(--primary-yellow);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
         }
 
-        .form-group input::placeholder {
-            color: var(--text-secondary);
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 16px;
-            background: var(--card-color);
+        #manualScanBtn {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, var(--primary-yellow), #ffd700);
             border: none;
             border-radius: var(--border-radius);
-            font-size: 1.1em;
-            font-weight: 700;
-            color: var(--primary-accent);
+            font-weight: bold;
             cursor: pointer;
             transition: var(--transition);
-            margin-top: 10px;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
         }
 
-        .submit-btn:hover {
+        #manualScanBtn:hover {
             transform: translateY(-2px);
-            box-shadow: 12px 12px 24px rgba(160, 174, 192, 0.25), -12px -12px 24px rgba(255, 255, 255, 0.8);
-        }
-
-        .submit-btn:active {
-            box-shadow: var(--inset-shadow);
-        }
-
-        /* Личный кабинет */
-        .profile-card {
-            background: var(--card-color);
-            border-radius: var(--border-radius);
-            padding: 32px;
-            margin-bottom: 32px;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
         .user-info {
-            margin-bottom: 28px;
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+        }
+
+        .user-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
         }
 
         .user-name {
-            font-size: 1.8em;
-            font-weight: 700;
-            margin-bottom: 12px;
-            color: var(--text-primary);
+            font-size: 1.5em;
+            margin-bottom: 10px;
         }
 
-        .user-email {
-            font-size: 1em;
-            color: var(--text-secondary);
-            margin-bottom: 20px;
+        .user-points {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
         }
 
-        .points-display {
-            background: var(--card-color);
-            padding: 20px 40px;
+        .promo-code {
+            background: var(--primary-yellow);
+            color: var(--primary-black);
+            padding: 10px;
             border-radius: var(--border-radius);
-            display: inline-block;
-            margin: 24px 0;
-            font-size: 2.2em;
-            font-weight: 800;
-            color: var(--primary-accent);
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-            min-width: 120px;
-        }
-
-        .points-label {
-            display: block;
-            font-size: 0.95em;
-            margin-top: 8px;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .qr-section {
-            background: var(--card-color);
-            padding: 28px;
-            border-radius: var(--border-radius);
-            display: inline-block;
-            margin: 0 auto;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-            text-align: center;
-        }
-
-        .qr-title {
-            font-weight: 700;
-            margin-bottom: 20px;
-            color: var(--text-primary);
-            font-size: 1.2em;
-        }
-
-        #qrCodeContainer {
-            display: inline-block;
-            padding: 24px;
-            background: var(--card-color);
-            border-radius: 16px;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-        }
-
-        .qr-instructions {
-            margin-top: 24px;
-            padding: 20px;
-            background: var(--card-color);
-            border-radius: var(--border-radius);
-            font-size: 0.95em;
-            line-height: 1.7;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-        }
-
-        /* Промокоды */
-        .promo-codes-section {
-            margin-top: 36px;
-            background: var(--card-color);
-            padding: 28px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-        }
-
-        .promo-title {
-            color: var(--text-primary);
-            margin-bottom: 24px;
-            font-size: 1.4em;
-            text-align: center;
-            font-weight: 700;
-        }
-
-        .promo-code-item {
-            background: var(--card-color);
-            color: var(--text-primary);
-            padding: 24px;
-            border-radius: var(--border-radius);
-            margin-bottom: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-            transition: var(--transition);
-        }
-
-        .promo-code-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 12px 12px 24px rgba(160, 174, 192, 0.25), -12px -12px 24px rgba(255, 255, 255, 0.8);
-        }
-
-        .promo-code-text {
-            font-size: 1.3em;
-            font-weight: 800;
+            font-weight: bold;
             font-family: monospace;
             letter-spacing: 2px;
-            cursor: pointer;
-            transition: var(--transition);
-            color: var(--primary-accent);
-        }
-
-        .promo-code-text:hover {
-            transform: scale(1.05);
-            color: var(--success-color);
-        }
-
-        .promo-expiry {
-            background: var(--card-color);
-            padding: 10px 20px;
-            border-radius: 50px;
-            font-size: 0.9em;
-            font-weight: 700;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-        }
-
-        .promo-expiry.expired {
-            color: var(--error-color);
-            background: #fee;
-        }
-
-        .promo-expiry.active {
-            color: var(--success-color);
-            background: #f0fff4;
-        }
-
-        /* Админ */
-        .admin-section {
+            margin-top: 15px;
             display: none;
-        }
-
-        .admin-header {
-            background: var(--card-color);
-            padding: 24px;
-            border-radius: var(--border-radius);
-            margin-bottom: 28px;
-            text-align: center;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-        }
-
-        .scan-container {
-            background: var(--card-color);
-            padding: 32px;
-            border-radius: var(--border-radius);
-            margin-bottom: 28px;
-            text-align: center;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-        }
-
-        .scan-title {
-            font-size: 1.4em;
-            margin-bottom: 24px;
-            color: var(--text-primary);
-            font-weight: 700;
-        }
-
-        .camera-container {
-            position: relative;
-            max-width: 400px;
-            margin: 0 auto 24px;
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            background: #000;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-        }
-
-        #videoElement {
-            width: 100%;
-            display: block;
-            background: #000;
-        }
-
-        .scan-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.1em;
-            font-weight: 600;
-            z-index: 2;
-        }
-
-        .scan-indicator {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 220px;
-            height: 220px;
-            border: 3px solid rgba(255, 255, 255, 0.8);
-            border-radius: 12px;
-            animation: pulseScan 2s infinite;
-            z-index: 1;
-        }
-
-        @keyframes pulseScan {
-            0%, 100% { 
-                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); 
-                border-color: rgba(255, 255, 255, 0.8);
-            }
-            50% { 
-                box-shadow: 0 0 0 15px rgba(255, 255, 255, 0); 
-                border-color: rgba(255, 255, 255, 0.4);
-            }
-        }
-
-        .manual-input {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 2px solid var(--border-color);
-        }
-
-        .manual-input-title {
-            color: var(--text-primary);
-            margin-bottom: 18px;
-            font-weight: 600;
-            font-size: 1.1em;
-        }
-
-        .scan-input-group {
-            display: flex;
-            gap: 12px;
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        .scan-input {
-            flex: 1;
-            padding: 16px 20px;
-            background: var(--card-color);
-            border: 2px solid var(--border-color);
-            border-radius: var(--border-radius);
-            font-size: 1em;
-            color: var(--text-primary);
-            box-shadow: var(--inset-shadow);
-        }
-
-        .scan-input:focus {
-            outline: none;
-            border-color: var(--primary-accent);
-            box-shadow: inset 4px 4px 8px rgba(160, 174, 192, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.9);
-        }
-
-        .scan-btn {
-            padding: 16px 24px;
-            background: var(--card-color);
-            border: none;
-            border-radius: var(--border-radius);
-            color: var(--primary-accent);
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-        }
-
-        .scan-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 12px 12px 24px rgba(160, 174, 192, 0.25), -12px -12px 24px rgba(255, 255, 255, 0.8);
-        }
-
-        .scan-result {
-            margin-top: 24px;
-            padding: 20px;
-            border-radius: var(--border-radius);
-            display: none;
-            font-weight: 600;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-        }
-
-        .scan-success {
-            background: #f0fff4;
-            color: var(--success-color);
-            border: 2px solid var(--success-color);
-        }
-
-        .scan-error {
-            background: #fff5f5;
-            color: var(--error-color);
-            border: 2px solid var(--error-color);
-        }
-
-        .user-info-display {
-            background: var(--card-color);
-            padding: 28px;
-            border-radius: var(--border-radius);
-            margin-top: 28px;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-            display: none;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 14px 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .info-row:last-child {
-            border-bottom: none;
-        }
-
-        .info-label {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .info-value {
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-
-        .redeem-section {
-            background: var(--card-color);
-            padding: 28px;
-            border-radius: var(--border-radius);
-            margin-top: 28px;
-            text-align: center;
-            display: none;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-            border: 2px solid var(--success-color);
-        }
-
-        .redeem-title {
-            font-size: 1.4em;
-            margin-bottom: 18px;
-            color: var(--success-color);
-            font-weight: 700;
-        }
-
-        .redeem-code {
-            background: var(--card-color);
-            padding: 20px 32px;
-            border-radius: var(--border-radius);
-            font-size: 1.8em;
-            font-weight: 800;
-            letter-spacing: 3px;
-            margin: 18px 0;
-            font-family: monospace;
-            cursor: pointer;
-            transition: var(--transition);
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-            color: var(--success-color);
-        }
-
-        .redeem-code:hover {
-            transform: scale(1.05);
-            box-shadow: 12px 12px 24px rgba(160, 174, 192, 0.25), -12px -12px 24px rgba(255, 255, 255, 0.8);
-        }
-
-        .redeem-btn {
-            padding: 14px 32px;
-            background: var(--card-color);
-            border: 2px solid var(--success-color);
-            border-radius: var(--border-radius);
-            font-weight: 700;
-            color: var(--success-color);
-            cursor: pointer;
-            transition: var(--transition);
-            margin-top: 14px;
-            font-size: 1.1em;
-        }
-
-        .redeem-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 8px 8px 16px rgba(160, 174, 192, 0.25), -8px -8px 16px rgba(255, 255, 255, 0.8);
-            background: var(--success-color);
-            color: white;
-        }
-
-        .users-list {
-            margin-top: 36px;
-        }
-
-        .users-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--card-color);
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-        }
-
-        .users-table th {
-            background: var(--card-color);
-            color: var(--text-primary);
-            padding: 18px 15px;
-            text-align: left;
-            font-weight: 700;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .users-table td {
-            padding: 16px 15px;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .points-badge {
-            background: var(--card-color);
-            color: var(--primary-accent);
-            padding: 8px 18px;
-            border-radius: 50px;
-            font-weight: 700;
-            display: inline-block;
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-        }
-
-        .status-badge {
-            padding: 6px 16px;
-            border-radius: 50px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-
-        .status-active {
-            background: #f0fff4;
-            color: var(--success-color);
-            border: 1px solid var(--success-color);
-        }
-
-        .status-inactive {
-            background: #f7fafc;
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
         }
 
         .notification {
             position: fixed;
-            top: 24px;
-            right: 24px;
-            padding: 18px 28px;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-green);
+            color: white;
+            padding: 15px 25px;
             border-radius: var(--border-radius);
-            box-shadow: var(--shadow-light), var(--shadow-dark);
-            transform: translateX(400px);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow);
             z-index: 1000;
-            font-weight: 600;
-            max-width: 320px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification.success {
-            background: #f0fff4;
-            color: var(--success-color);
-            border: 2px solid var(--success-color);
+            opacity: 1;
         }
 
         .notification.error {
-            background: #fff5f5;
-            color: var(--error-color);
-            border: 2px solid var(--error-color);
+            background: var(--primary-red);
         }
 
-        footer {
-            text-align: center;
-            margin-top: 36px;
-            color: var(--text-secondary);
-            font-size: 0.95em;
-            padding: 20px;
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 10px;
         }
 
-        @media (max-width: 768px) {
-            .scan-input-group {
-                flex-direction: column;
-            }
-            .tab-btn {
-                padding: 10px 16px;
-                font-size: 0.85em;
-                min-width: auto;
-            }
-            .points-display {
-                font-size: 1.8em;
-                padding: 16px 28px;
-                min-width: 100px;
-            }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-yellow), #ffd700);
+            color: var(--primary-black);
+        }
+
+        .btn-secondary {
+            background: var(--primary-gray);
+            color: var(--primary-black);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <div class="logo">БОНУС+ПРОМО</div>
-            <div class="subtitle">Программа лояльности для ценителей натуральной косметики</div>
-            <button class="admin-access" id="adminAccessBtn">Админка</button>
-            <div class="tabs">
-                <button class="tab-btn active" data-tab="register">Регистрация</button>
-                <button class="tab-btn" data-tab="profile">Мой профиль</button>
-                <button class="tab-btn admin-tab" data-tab="admin">Админ панель</button>
-            </div>
-        </header>
+        <div class="logo">✨ Арома-Квест ✨</div>
+        <div class="subtitle">Скан QR-кода или введите его вручную</div>
 
-        <div class="main-content">
-            <!-- Регистрация -->
-            <div id="registerSection" class="tab-content active">
-                <h2 class="section-title">Регистрация в программе</h2>
-                <form class="registration-form" id="registrationForm">
-                    <div class="form-group">
-                        <label for="name">Ваше имя *</label>
-                        <input type="text" id="name" placeholder="Введите ваше имя" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email *</label>
-                        <input type="email" id="email" placeholder="Введите ваш email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Телефон *</label>
-                        <input type="tel" id="phone" placeholder="+7 (XXX) XXX-XX-XX" required>
-                    </div>
-                    <button type="submit" class="submit-btn">Получить карту лояльности</button>
-                </form>
+        <div class="scan-section">
+            <div id="cameraContainer">
+                <video id="video" playsinline></video>
+                <div id="fallbackMessage">Камера не доступна. Введите QR вручную.</div>
             </div>
 
-            <!-- Профиль -->
-            <div id="profileSection" class="tab-content" style="display: none;">
-                <h2 class="section-title">Мой профиль</h2>
-                <div class="profile-card">
-                    <div class="user-info">
-                        <div class="user-name" id="profileName">Имя пользователя</div>
-                        <div class="user-email" id="profileEmail">user@example.com</div>
-                    </div>
-                    <div class="points-display">
-                        <span id="profilePoints">0</span>
-                        <div class="points-label">баллов</div>
-                    </div>
-                    <p style="color: var(--text-secondary); font-size: 0.95em; line-height: 1.6;">
-                        За каждую покупку начисляется 10 баллов.<br>
-                        При накоплении 100 баллов вы получите промокод на скидку 10%!
-                    </p>
-                </div>
-
-                <div class="qr-section">
-                    <div class="qr-title">Ваша карта лояльности</div>
-                    <div id="qrCodeContainer"></div>
-                    <div class="qr-instructions">
-                        <p><strong>Как использовать:</strong></p>
-                        <p>Покажите этот QR-код сотруднику магазина при каждой покупке для начисления баллов.</p>
-                        <p>QR-код уникален и привязан только к вашему аккаунту.</p>
-                    </div>
-                </div>
-
-                <div class="promo-codes-section">
-                    <h3 class="promo-title">Ваши промокоды</h3>
-                    <div id="promoCodesList">
-                        <p style="text-align: center; color: var(--text-secondary);">У вас пока нет активных промокодов</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Админ -->
-            <div id="adminSection" class="tab-content admin-section" style="display: none;">
-                <div class="admin-header">
-                    <h2 class="section-title">Админ панель</h2>
-                    <p style="color: var(--text-secondary); margin-top: 12px;">Сканируйте QR-коды клиентов для начисления баллов</p>
-                </div>
-
-                <div class="scan-container">
-                    <div class="scan-title">Автоматическое сканирование через камеру</div>
-                    <div class="camera-container">
-                        <video id="videoElement" autoplay playsinline></video>
-                        <div class="scan-overlay" id="scanOverlay">Наведите камеру на QR-код</div>
-                        <div class="scan-indicator"></div>
-                    </div>
-                    
-                    <div class="manual-input">
-                        <div class="manual-input-title">Или введите код вручную:</div>
-                        <div class="scan-input-group">
-                            <input type="text" class="scan-input" id="qrInput" placeholder="Введите код из QR-кода..." autocomplete="off">
-                            <button class="scan-btn" id="manualScanBtn">Начислить</button>
-                        </div>
-                    </div>
-                    
-                    <div class="scan-result" id="scanResult"></div>
-                </div>
-
-                <div class="user-info-display" id="userInfoDisplay" style="display: none;">
-                    <h3 style="margin-bottom: 20px; color: var(--text-primary); font-weight: 700;">Информация клиенте</h3>
-                    <div class="info-row">
-                        <span class="info-label">Имя:</span>
-                        <span class="info-value" id="userInfoName">-</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Email:</span>
-                        <span class="info-value" id="userInfoEmail">-</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Телефон:</span>
-                        <span class="info-value" id="userInfoPhone">-</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Баллы:</span>
-                        <span class="info-value"><span class="points-badge" id="userInfoPoints">0</span></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Статус:</span>
-                        <span class="info-value">
-                            <span class="status-badge status-active" id="userInfoStatus">Активен</span>
-                        </span>
-                    </div>
-                </div>
-
-                <div class="redeem-section" id="redeemSection" style="display: none;">
-                    <div class="redeem-title">Доступна скидка 10%!</div>
-                    <p>Клиент накопил 100 баллов. Вы можете списать баллы и выдать промокод.</p>
-                    <div class="redeem-code" id="promoCode">PROMO10</div>
-                    <p style="color: var(--text-secondary); margin-bottom: 15px; font-size: 0.95em;">Промокод действует 2 дня</p>
-                    <button class="redeem-btn" id="redeemBtn">Выдать промокод и списать 100 баллов</button>
-                </div>
-
-                <div class="users-list">
-                    <h3 style="margin-bottom: 20px; color: var(--text-primary); font-weight: 700;">Список всех клиентов</h3>
-                    <table class="users-table">
-                        <thead>
-                            <tr>
-                                <th>Имя</th>
-                                <th>Email</th>
-                                <th>Телефон</th>
-                                <th>Баллы</th>
-                                <th>Статус</th>
-                            </tr>
-                        </thead>
-                        <tbody id="usersTableBody">
-                            <!-- заполнится JS -->
-                        </tbody>
-                    </table>
-                </div>
+            <div class="input-group">
+                <input type="text" id="qrInput" placeholder="Введите QR-код вручную..." autocomplete="off" />
+                <button id="manualScanBtn">Начислить</button>
             </div>
         </div>
 
-        <footer>
-            <p>БОНУС+ПРОМО © 2026 | Программа лояльности</p>
-            <p style="margin-top: 8px; font-size: 0.9em;">Покажите ваш QR-код при покупке для начисления баллов</p>
-        </footer>
+        <div class="user-info">
+            <div id="userInfo" style="display: none;">
+                <div class="user-card">
+                    <div class="user-name" id="userName">Имя пользователя</div>
+                    <div>Баллы:</div>
+                    <div class="user-points" id="userPoints">0</div>
+                    <div class="promo-code" id="promoCode"></div>
+                </div>
+                <button class="btn btn-secondary" id="resetUserBtn">Сбросить пользователя</button>
+            </div>
+
+            <div id="registerSection" style="display: none;">
+                <h3>Зарегистрировать нового пользователя</h3>
+                <p>QR-код не найден в системе.</p>
+                <button class="btn btn-primary" id="registerBtn">Зарегистрировать</button>
+            </div>
+        </div>
     </div>
 
     <div class="notification" id="notification"></div>
 
+    <audio id="successSound" preload="auto">
+        <source src="data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" type="audio/mpeg">
+    </audio>
+
     <script>
-        // Глобальные переменные (объявлены в глобальной области)
-        var currentUser = null;
-        var isAdminMode = false;
-        var adminPassword = 'admin123';
-        var videoElement = null;
-        var canvasElement = null;
-        var scanning = false;
-        var currentScannedUser = null;
+        // Глобальные переменные
+        let currentScannedUser = null;
+        window.loyaltyUsers = [];
 
-        // Инициализация при загрузке
-        document.addEventListener('DOMContentLoaded', function() {
-            loadUserData();
-            setupEventListeners();
-            updateUsersTable();
-            updatePromoCodesDisplay();
-
-            if (currentUser) {
-                showProfile();
-            }
-
-            // Попробуем инициализировать камеру (если поддерживается)
-            initCamera();
-        });
-
+        // Загрузка данных
         function loadUserData() {
-            try {
-                var savedUser = localStorage.getItem('loyaltyUser');
-                var savedUsers = localStorage.getItem('loyaltyUsers');
-
-                if (savedUser) {
-                    currentUser = JSON.parse(savedUser);
-                }
-
-                if (savedUsers) {
-                    window.loyaltyUsers = JSON.parse(savedUsers);
-                } else {
+            const saved = localStorage.getItem('loyaltyUsers');
+            if (saved) {
+                try {
+                    window.loyaltyUsers = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Ошибка загрузки пользователей:', e);
                     window.loyaltyUsers = [];
                 }
-            } catch (e) {
-                console.error('Ошибка загрузки данных:', e);
-                window.loyaltyUsers = [];
             }
         }
 
+        // Сохранение данных
         function saveUserData() {
-            try {
-                if (currentUser) {
-                    localStorage.setItem('loyaltyUser', JSON.stringify(currentUser));
+            localStorage.setItem('loyaltyUsers', JSON.stringify(window.loyaltyUsers));
+        }
+
+        // Показ уведомления
+        function showNotification(message, type = 'success') {
+            const el = document.getElementById('notification');
+            el.textContent = message;
+            el.className = `notification ${type === 'error' ? 'error' : ''} show`;
+            setTimeout(() => el.classList.remove('show'), 3000);
+        }
+
+        // Воспроизведение звука
+        function playSuccessSound() {
+            const audio = document.getElementById('successSound');
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log('Звук не воспроизведён:', e));
+        }
+
+        // Обработка отсканированного кода
+        function processScannedCode(qrData) {
+            if (!qrData || typeof qrData !== 'string') {
+                showNotification('Неверный формат QR-кода', 'error');
+                return;
+            }
+
+            const user = window.loyaltyUsers.find(u => u.qrCode === qrData);
+            if (user) {
+                // Начисление баллов
+                user.points += 10;
+                currentScannedUser = user;
+                saveUserData();
+                updateUserInfo();
+
+                showNotification(`+10 баллов! Всего: ${user.points}`, 'success');
+                playSuccessSound();
+
+                // Проверка на промокод (каждые 100 баллов)
+                if (user.points % 100 === 0) {
+                    const promo = `AROMA${user.points}`;
+                    user.promoCodes = user.promoCodes || [];
+                    user.promoCodes.push(promo);
+                    saveUserData();
+                    document.getElementById('promoCode').textContent = `Промокод: ${promo}`;
+                    document.getElementById('promoCode').style.display = 'block';
+                    showNotification(`🎉 Получен промокод: ${promo}`, 'success');
                 }
-                localStorage.setItem('loyaltyUsers', JSON.stringify(window.loyaltyUsers));
-            } catch (e) {
-                console.error('Ошибка сохранения данных:', e);
+            } else {
+                // Пользователь не найден — показ регистрации
+                document.getElementById('registerSection').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'none';
+                currentScannedUser = { qrCode: qrData };
             }
         }
 
-        function setupEventListeners() {
-            // Табы
-            var tabButtons = document.querySelectorAll('.tab-btn');
-            for (var i = 0; i < tabButtons.length; i++) {
-                tabButtons[i].addEventListener('click', function() {
-                    for (var j = 0; j < tabButtons.length; j++) {
-                        tabButtons[j].classList.remove('active');
-                    }
-                    this.classList.add('active');
+        // Обновление информации о пользователе
+        function updateUserInfo() {
+            if (!currentScannedUser) return;
 
-                    var sections = document.querySelectorAll('.tab-content');
-                    for (var k = 0; k < sections.length; k++) {
-                        sections[k].style.display = 'none';
-                    }
+            document.getElementById('userName').textContent = currentScannedUser.name || 'Пользователь';
+            document.getElementById('userPoints').textContent = currentScannedUser.points || 0;
 
-                    var targetId = this.getAttribute('data-tab') + 'Section';
-                    document.getElementById(targetId).style.display = 'block';
-
-                    if (this.getAttribute('data-tab') === 'profile') {
-                        updatePromoCodesDisplay();
-                    }
-                });
+            const promoEl = document.getElementById('promoCode');
+            if (currentScannedUser.promoCodes && currentScannedUser.promoCodes.length > 0) {
+                promoEl.textContent = `Промокод: ${currentScannedUser.promoCodes[currentScannedUser.promoCodes.length - 1]}`;
+                promoEl.style.display = 'block';
+            } else {
+                promoEl.style.display = 'none';
             }
 
-            // Регистрация
-            document.getElementById('registrationForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                registerUser();
-            });
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('registerSection').style.display = 'none';
+        }
 
-            // Админ доступ
-            document.getElementById('adminAccessBtn').addEventListener('click', function() {
-                var password = prompt('Введите пароль администратора:');
-                if (password === adminPassword) {
-                    isAdminMode = true;
-                    document.querySelector('.admin-tab').style.display = 'block';
-                    showNotification('Добро пожаловать в админ панель!', 'success');
-                } else if (password !== null) {
-                    showNotification('Неверный пароль!', 'error');
-                }
-            });
+        // Регистрация нового пользователя
+        function registerUser() {
+            if (!currentScannedUser || !currentScannedUser.qrCode) {
+                showNotification('Нет данных для регистрации', 'error');
+                return;
+            }
 
-            // Ручное сканирование
+            const name = prompt('Введите имя пользователя:');
+            if (!name) {
+                showNotification('Регистрация отменена', 'error');
+                return;
+            }
+
+            const newUser = {
+                qrCode: currentScannedUser.qrCode,
+                name: name.trim(),
+                points: 0,
+                promoCodes: []
+            };
+
+            window.loyaltyUsers.push(newUser);
+            currentScannedUser = newUser;
+            saveUserData();
+            updateUserInfo();
+            showNotification('Пользователь зарегистрирован!', 'success');
+        }
+
+        // Сброс текущего пользователя
+        function resetUser() {
+            currentScannedUser = null;
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('registerSection').style.display = 'none';
+            document.getElementById('qrInput').value = '';
+        }
+
+        // Инициализация камеры (упрощённая)
+        function initCamera() {
+            const video = document.getElementById('video');
+            const fallback = document.getElementById('fallbackMessage');
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                fallback.textContent = 'Камера не поддерживается. Введите QR вручную.';
+                return;
+            }
+
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(stream => {
+                    video.srcObject = stream;
+                    video.play();
+                    video.style.display = 'block';
+                    fallback.style.display = 'none';
+
+                    // Здесь можно добавить QR-сканер (например, через jsQR),
+                    // но для простоты оставим только ручной ввод.
+                })
+                .catch(err => {
+                    console.warn('Камера недоступна:', err);
+                    fallback.textContent = 'Камера заблокирована или недоступна. Введите QR вручную.';
+                });
+        }
+
+        // 🔥 КРИТИЧЕСКИ ВАЖНАЯ ФУНКЦИЯ — была пропущена!
+        function manualScan() {
+            const input = document.getElementById('qrInput');
+            const code = input.value.trim();
+            if (!code) {
+                showNotification('Введите QR-код', 'error');
+                return;
+            }
+            processScannedCode(code);
+            input.value = '';
+        }
+
+        // Инициализация
+        function init() {
+            loadUserData();
+
+            // Кнопки
             document.getElementById('manualScanBtn').addEventListener('click', manualScan);
             document.getElementById('qrInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     manualScan();
                 }
             });
+            document.getElementById('registerBtn').addEventListener('click', registerUser);
+            document.getElementById('resetUserBtn').addEventListener('click', resetUser);
 
-            // Выдача промокода
-            document.getElementById('redeemBtn').addEventListener('click', redeemPromoCode);
-
-            // Копирование промокода
-            document.getElementById('promoCode').addEventListener('click', function() {
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(this.textContent).then(function() {
-                        showNotification('Промокод скопирован в буфер обмена!', 'info');
-                    }).catch(function() {
-                        showNotification('Не удалось скопировать', 'error');
-                    });
-                } else {
-                    showNotification('Копирование недоступно в этом браузере', 'warning');
-                }
-            });
+            // Камера
+            initCamera();
         }
 
-        function initCamera() {
-            videoElement = document.getElementById('videoElement');
-            canvasElement = document.createElement('canvas');
-
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                document.getElementById('scanOverlay').textContent = 'Камера не поддерживается';
-                return;
-            }
-
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-                .then(function(stream) {
-                    videoElement.srcObject = stream;
-                    startScanning();
-                })
-                .catch(function(err) {
-                    console.warn('Камера недоступна:', err);
-                    document.getElementById('scanOverlay').textContent = 'Камера недоступна';
-                });
-        }
-
-        function startScanning() {
-            if (scanning) return;
-            scanning = true;
-            scanFrame();
-        }
-
-        function scanFrame() {
-            if (!scanning) return;
-
-            if (!videoElement.videoWidth) {
-                setTimeout(scanFrame, 500);
-                return;
-            }
-
-            var context = canvasElement.getContext('2d');
-            canvasElement.width = videoElement.videoWidth;
-            canvasElement.height = videoElement.videoHeight;
-            context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-
-            var imageData = context.getImageData(0, 0, canvasElement.width, canvasElement.height);
-            var code = jsQR(imageData.data, imageData.width, imageData.height);
-
-            if (code) {
-                stopScanning();
-                handleScannedCode(code.data);
-                return;
-            }
-
-            requestAnimationFrame(scanFrame);
-        }
-
-        function stopScanning() {
-            scanning = false;
-        }
-
-        function handleScannedCode(qrData) {
-            document.getElementById('scanOverlay').textContent = '✅ Код найден!';
-            setTimeout(function() {
-                document.getElementById('scanOverlay').textContent = 'Наведите камеру на QR-код';
-                processScannedCode(qrData);
-            }, 2000);
-            setTimeout(startScanning, 3000);
-        }
-
-        function processScannedCode(qrData) {
-            var user = null;
-            for (var i = 0; i < window.loyaltyUsers.length; i++) {
-                if (window.loyaltyUsers[i].qrCode === qrData) {
-                    user = window.loyaltyUsers[i];
-                    break;
-                }
-            }
-
-            var scanResult = document.getElementById('scanResult');
-            scanResult.style.display = 'block';
-
-            if (!user) {
-                scanResult.className = 'scan-result scan-error';
-                scanResult.textContent = '❌ Пользователь не найден.';
-                document.getElementById('userInfoDisplay').style.display = 'none';
-                document.getElementById('redeemSection').style.display = 'none';
-                return;
-            }
-
-            user.points += 10;
-            user.lastScan = new Date().toISOString();
-
-            if (currentUser && currentUser.id === user.id) {
-                currentUser.points = user.points;
-            }
-            saveUserData();
-
-            currentScannedUser = user;
-            updateUserInfoDisplay(user);
-
-            if (user.points >= 100) {
-                document.getElementById('redeemSection').style.display = 'block';
-                generateDynamicPromoCode();
-                scanResult.className = 'scan-result scan-success';
-                scanResult.innerHTML = '✅ +10 баллов<br>🎉 Доступна скидка 10%!';
-            } else {
-                document.getElementById('redeemSection').style.display = 'none';
-                scanResult.className = 'scan-result scan-success';
-                scanResult.innerHTML = '✅ +10 баллов<br>Баланс: ' + user.points + '/100';
-            }
-
-            updateUsersTable();
-            if (currentUser && currentUser.id === user.id) {
-                document.getElementById('profilePoints').textContent = user.points;
-                updatePromoCodesDisplay();
-            }
-        }
-
-        function updateUserInfoDisplay(user) {
-            document.getElementById('userInfoName').textContent = user.name;
-            document.getElementById('userInfoEmail').textContent = user.email;
-            document.getElementById('userInfoPhone').textContent = user.phone;
-            document.getElementById('userInfoPoints').textContent = user.points;
-            document.getElementById('userInfoStatus').textContent = 'Активен';
-            document.getElementById('userInfoDisplay').style.display = 'block';
-        }
-
-        function generateDynamicPromoCode() {
-            var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            var result = 'PROMO10_';
-            for (var i = 0; i < 8; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            document.getElementById('promoCode').textContent = result;
-            return result;
-        }
-
-        function registerUser() {
-            var name = document.getElementById('name').value.trim();
-            var email = document.getElementById('email').value.trim();
-            var phone = document.getElementById('phone').value.trim();
-
-            if (!name || !email || !phone) {
-                showNotification('Заполните все поля', 'error');
-                return;
-            }
-
-            var userId = 'USER_' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 5).toUpperCase();
-            var qrCode = 'BONUS_' + userId;
-
-            currentUser = {
-                id: userId,
-                name: name,
-                email: email,
-                phone: phone,
-                qrCode: qrCode,
-                points: 0,
-                registeredAt: new Date().toISOString(),
-                lastScan: null,
-                promoCodes: []
-            };
-
-            window.loyaltyUsers.push(currentUser);
-            saveUserData();
-            generateQRCode(qrCode);
-            showProfile();
-            showNotification('Регистрация успешна!', 'success');
-        }
-
-        function showProfile() {
-            if (!currentUser) return;
-
-            document.getElementById('profileName').textContent = currentUser.name;
-            document.getElementById('profileEmail').textContent = currentUser.email;
-            document.getElementById('profilePoints').textContent = currentUser.points;
-            document.querySelectorAll('.tab-btn')[1].click(); // переключаем на профиль
-            updatePromoCodesDisplay();
-        }
-
-        function generateQRCode(data) {
-            try {
-                var qr = qrcode(0, 'M');
-                qr.addData(data);
-                qr.make();
-                var qrHtml = qr.createImgTag(4, 8);
-                document.getElementById('qrCodeContainer').innerHTML = qrHtml + '<div style="margin-top:12px;font-weight:600;color:' + getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') + ';font-size:0.85em;">' + data + '</div>';
-            } catch (e) {
-                console.error('QR error:', e);
-                document.getElementById('qrCodeContainer').innerHTML = '<p style="color:red;">Ошибка генерации QR</p>';
-            }
-        }
-
-        function redeemPromoCode() {
-            if (!currentScannedUser || currentScannedUser.points < 100) {
-                showNotification('Недостаточно баллов', 'error');
-                return;
-            }
-
-            var promoCode = document.getElementById('promoCode').textContent;
-            currentScannedUser.points -= 100;
-
-            var now = new Date();
-            var expiry = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000); // 2 дня
-
-            var newPromo = {
-                code: promoCode,
-                issuedAt: now.toISOString(),
-                expiresAt: expiry.toISOString(),
-                used: false
-            };
-
-            if (!currentScannedUser.promoCodes) currentScannedUser.promoCodes = [];
-            currentScannedUser.promoCodes.push(newPromo);
-
-            if (currentUser && currentUser.id === currentScannedUser.id) {
-                currentUser.points = currentScannedUser.points;
-                currentUser.promoCodes = currentScannedUser.promoCodes;
-            }
-
-            saveUserData();
-            document.getElementById('userInfoPoints').textContent = currentScannedUser.points;
-            document.getElementById('redeemSection').style.display = 'none';
-
-            if (currentUser && currentUser.id === currentScannedUser.id) {
-                document.getElementById('profilePoints').textContent = currentScannedUser.points;
-                updatePromoCodesDisplay();
-            }
-
-            updateUsersTable();
-            showNotification('Промокод ' + promoCode + ' выдан!', 'success');
-
-            // Копируем в буфер
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(promoCode).catch(function() {});
-            }
-
-            generateDynamicPromoCode();
-        }
-
-        function updatePromoCodesDisplay() {
-            if (!currentUser) {
-                document.getElementById('promoCodesList').innerHTML = '<p style="text-align: center; color: var(--text-secondary);">У вас пока нет активных промокодов</p>';
-                return;
-            }
-
-            var now = new Date();
-            var active = [];
-            if (currentUser.promoCodes && currentUser.promoCodes.length > 0) {
-                for (var i = 0; i < currentUser.promoCodes.length; i++) {
-                    var p = currentUser.promoCodes[i];
-                    var expiry = new Date(p.expiresAt);
-                    if (expiry > now && !p.used) {
-                        active.push(p);
-                    }
-                }
-            }
-
-            if (active.length === 0) {
-                document.getElementById('promoCodesList').innerHTML = '<p style="text-align: center; color: var(--text-secondary);">У вас пока нет активных промокодов</p>';
-                return;
-            }
-
-            var html = '';
-            for (var i = 0; i < active.length; i++) {
-                var p = active[i];
-                var expiry = new Date(p.expiresAt);
-                var daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
-                var cls = expiry <= now ? 'promo-expired' : '';
-                var expCls = expiry <= now ? 'expired' : 'active';
-                html += '<div class="promo-code-item ' + cls + '">' +
-                    '<div class="promo-code-text" onclick="copyPromoCode(\'' + p.code + '\')">' + p.code + '</div>' +
-                    '<div class="promo-expiry ' + expCls + '">' + (expiry <= now ? 'Истёк' : 'Действует ' + daysLeft + ' дн.') + '</div>' +
-                    '</div>';
-            }
-            document.getElementById('promoCodesList').innerHTML = html;
-        }
-
-        window.copyPromoCode = function(code) {
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(code).then(function() {
-                    showNotification('Скопировано!', 'info');
-                });
-            }
-        };
-
-        function updateUsersTable() {
-            var tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = '';
-            for (var i = 0; i < window.loyaltyUsers.length; i++) {
-                var u = window.loyaltyUsers[i];
-                var row = '<tr>' +
-                    '<td>' + u.name + '</td>' +
-                    '<td>' + u.email + '</td>' +
-                    '<td>' + u.phone + '</td>' +
-                    '<td><span class="points-badge">' + u.points + '</span></td>' +
-                    '<td><span class="status-badge status-' + (u.points > 0 ? 'active' : 'inactive') + '">' +
-                    (u.points > 0 ? 'Активен' : 'Новый') + '</span></td>' +
-                    '</tr>';
-                tbody.innerHTML += row;
-            }
-        }
-
-        function showNotification(message, type) {
-            var n = document.getElementById('notification');
-            n.textContent = message;
-            n.className = 'notification ' + (type || 'info') + ' show';
-            setTimeout(function() {
-                n.classList.remove('show');
-            }, 3000);
-        }
-
-        // Периодическая проверка (раз в минуту)
-        setInterval(function() {
-            if (currentUser) {
-                updatePromoCodesDisplay();
-            }
-        }, 60000);
+        // Запуск при загрузке
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
